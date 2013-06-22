@@ -1,0 +1,357 @@
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <ctype.h>
+
+#include "gbparse.h"
+#include "buffer.h"
+
+extern char *src;
+
+struct element {
+	char op[7];
+	int tok;
+};
+
+static const struct element operators[] = {
+	{.op = "&&", .tok = LOGAND},
+	{.op = "||", .tok = LOGOR},
+	{.op = "==", .tok = EQ},
+	{.op = "!=", .tok = NEQ},
+	{.op = "<<", .tok = LSHIFT},
+	{.op = ">>", .tok = RSHIFT},
+	{.op = "<=", .tok = LE},
+	{.op = ">=", .tok = GE}
+};
+
+static int scan_operator(void) {
+	size_t i;
+	
+	for(i = 0; i < sizeof(operators) / sizeof(operators[0]); ++i) {
+		size_t len = strlen(operators[i].op);
+		if(strncasecmp(src, operators[i].op, len) == 0) {
+			src += len;
+#ifdef DEBUG
+			printf("yylex returns %s\n", operators[i].op);
+#endif
+			return operators[i].tok;
+		}
+	}
+	return 0;
+}
+
+static unsigned int chr2dec(unsigned char x) {
+	if(x >= '0' && x <= '9')
+		return x - '0';
+	x &= ~0x20;
+	if(x >= 'A' && x <= 'Z')
+		return x - 'A' + 10;
+	return 0xff;
+}
+
+/* scans an unsigned int, adds it to the token_list and returns the pointer
+where it finished reading */
+/* should we check for 2 <= base <= 36 ? */
+static void scan_uint(unsigned int base) {
+	unsigned int i = 0;
+	unsigned char c;
+	
+	while(1) {
+		c = chr2dec(*src);
+		if(c >= base) /* this also includes the 0xff case */
+			break;
+		i *= base;
+		i += c;
+		++src;
+	}
+	/* maybe we should check for whitespace or something */
+	
+	yylval.integer = i;
+}
+
+static char slash_char(const char c) {
+	switch(c) {
+	case 'a': return '\a';
+	case 'b': return '\b';
+	case 'e': return '\e';
+	case 'f': return '\f';
+	case 'n': return '\n';
+	case 'r': return '\r';
+	case 't': return '\t';
+	case 'v': return '\v';
+	default: return c;
+	}
+}
+
+static void scan_char(void) {
+	char new_char;
+	
+	if(*src == 0 || src[1] == 0) {
+		char_error:
+		puts("character constant does not end or is too long");
+		return;
+	}
+	
+	if(*src == '\\') {
+		++src;
+		if(*src == 0 || src[1] != '\'')
+			goto char_error;
+		
+		new_char = slash_char(*src);
+	}
+	else if(src[1] == '\'')
+		new_char = *src;
+	else
+		goto char_error;
+	
+	yylval.integer = new_char;
+	src += 2;
+}
+
+static int scan_int(void) {
+	if(*src == '\'') {
+		++src;
+		scan_char();
+	}
+	else if(*src == '0') {
+		++src;
+		if(*src == 'x') {
+			++src;
+			scan_uint(16);
+		}
+		else if(*src == 'b') {
+			++src;
+			scan_uint(2);
+		}
+		else {
+			--src; /* we go one char back to recognize a single '0' */
+			scan_uint(8);
+		}
+	}
+	else if(isdigit(*src))
+		scan_uint(10);
+	else
+		return 0;
+	return NUM;
+}
+
+static int scan_string(void) {
+	char new_char;
+	BUFFER *buf;
+	
+	buf = buffer_new();
+	if(buf == NULL)
+		{};
+	
+	if(*src == '"')
+		++src;
+	else
+		return 0;
+	
+	while(*src != '"') {
+// 		if(*src == '\n')
+// 			++*line;
+		
+		if(*src == 0) {
+			string_does_not_end:
+			return 0;
+// 			gbasm_error_line(filename, starting_line, "String does not end");
+		}
+		
+		if(*src == '\\') {
+			++src;
+			if(*src == 0)
+				goto string_does_not_end;
+			if(*src == '\n') { /* backslash newline means ignore newline */
+// 				++*line;
+				++src;
+				continue;
+			}
+			
+			new_char = slash_char(*src);
+		}
+		else
+			new_char = *src;
+		
+		buffer_add_char(buf, new_char);
+		++src;
+	}
+	
+	buffer_add_char(buf, 0);
+	yylval.string = buf->data;
+	buffer_destroy_keep(buf);
+	
+#ifdef DEBUG
+	printf("yylex returns \"%s\"\n", yylval.string);
+#endif
+	
+	++src; /* now src points to the char after the " */
+	return STR;
+}
+
+#define ENTRY(token) {.op = #token, .tok = token}
+static const struct element tokentable[] = {
+	ENTRY(A),
+	ENTRY(ADC),
+	ENTRY(ADD),
+	ENTRY(AF),
+	ENTRY(AND),
+	ENTRY(B),
+	ENTRY(BC),
+	ENTRY(BIT),
+	ENTRY(C),
+	ENTRY(CALL),
+	ENTRY(CCF),
+	ENTRY(CP),
+	ENTRY(CPL),
+	ENTRY(D),
+	ENTRY(DAA),
+	ENTRY(DB),
+	ENTRY(DE),
+	ENTRY(DEC),
+	ENTRY(DEFB),
+	ENTRY(DEFINE),
+	ENTRY(DEFM),
+	ENTRY(DEFS),
+	ENTRY(DEFW),
+	ENTRY(DI),
+	ENTRY(DM),
+	ENTRY(DS),
+	ENTRY(DW),
+	ENTRY(E),
+	ENTRY(EI),
+	ENTRY(H),
+	ENTRY(HALT),
+	ENTRY(HL),
+	ENTRY(INC),
+	ENTRY(JP),
+	ENTRY(JR),
+	ENTRY(L),
+	ENTRY(LD),
+	ENTRY(LDD),
+	ENTRY(LDH),
+	ENTRY(LDHL),
+	ENTRY(LDI),
+	ENTRY(NC),
+	ENTRY(NOP),
+	ENTRY(NZ),
+	ENTRY(OR),
+	ENTRY(POP),
+	ENTRY(PUSH),
+	ENTRY(RES),
+	ENTRY(RET),
+	ENTRY(RETI),
+	ENTRY(RL),
+	ENTRY(RLA),
+	ENTRY(RLC),
+	ENTRY(RLCA),
+	ENTRY(RR),
+	ENTRY(RRA),
+	ENTRY(RRC),
+	ENTRY(RRCA),
+	ENTRY(RST),
+	ENTRY(SBC),
+	ENTRY(SCF),
+	ENTRY(SEEK),
+	ENTRY(SET),
+	ENTRY(SLA),
+	ENTRY(SP),
+	ENTRY(SRA),
+	ENTRY(SRL),
+	ENTRY(STOP),
+	ENTRY(SUB),
+	ENTRY(SWAP),
+	ENTRY(XOR),
+	ENTRY(Z)
+};
+#undef ENTRY
+
+static int identifier_char(char x) {
+	if(isalnum(x) || x == '_')
+		return 1;
+	return 0;
+}
+
+static int find_special_token(char *found) {
+	size_t i;
+	
+	for(i = 0; i < sizeof(tokentable) / sizeof(tokentable[0]); ++i) {
+		if(strcasecmp(found, tokentable[i].op) == 0) {
+#ifdef DEBUG
+			printf("yylex returns token %s\n", tokentable[i].op);
+#endif
+			return tokentable[i].tok;
+		}
+	}
+	return 0;
+}
+
+static int scan_identifier(void) {
+	BUFFER *buf;
+	int status;
+	
+	buf = buffer_new();
+	if(buf == NULL)
+		{};
+	
+	if(isalpha(*src))
+		buffer_add_char(buf, *src);
+	else
+		return 0;
+	++src;
+	
+	while(identifier_char(*src)) {
+		buffer_add_char(buf, *src);
+		++src;
+	}
+	buffer_add_char(buf, 0);
+	
+	status = find_special_token(buf->data);
+	if(status) {
+		buffer_destroy(buf);
+		return status;
+	}
+	
+	yylval.identifier = buf->data;
+	buffer_destroy_keep(buf);
+#ifdef DEBUG
+	printf("yylex returns identifier %s\n", yylval.identifier);
+#endif
+	
+	return IDENT;
+}
+
+int yylex(void) {
+	int status;
+	
+	/* Skip white space. */
+	skip_white_space:
+	while(*src == ' ' || *src == '\t' || *src == '\n')
+		++src;
+	
+	/* skip comments */
+	if(*src == ';') {
+		while(*src != '\n' && *src != 0)
+			++src;
+		goto skip_white_space;
+	}
+	
+	status = scan_operator();
+	if(status != 0)
+		return status;
+	
+	status = scan_int();
+	if(status != 0)
+		return status;
+	
+	status = scan_string();
+	if(status != 0)
+		return status;
+	
+	status = scan_identifier();
+	if(status != 0)
+		return status;
+	
+	/* Return a single char or, when end of string, 0 */
+	return *src++;
+}

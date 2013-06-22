@@ -1,0 +1,5 @@
+*.o
+gbasm
+gbparse.c
+gbparse.h
+a.gb
