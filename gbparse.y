@@ -474,7 +474,9 @@ NUM { $$ = $1; }
 
 string:
 STR { $$ = $1; }
-| string STR { $$ = concat_strings($1, $2); }
+/* | string STR { $$ = concat_strings($1, $2); } */
+| string '+' string { $$ = concat_strings($1, $3); }
+| numexp '?' string ':' string { $$ = $1 ? $3 : $5; }
 ;
 
 uint8list:
