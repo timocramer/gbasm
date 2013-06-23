@@ -7,7 +7,7 @@ HEADERS=gbparse.h buffer.h variables.h
 .PHONY: clean
 
 gbasm: $(OBJECTS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) -o $@ $^
 
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c -o $@ $<
