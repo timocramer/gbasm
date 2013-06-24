@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "buffer.h"
 
@@ -332,6 +333,8 @@ static void disassemble(const BUFFER *binary) {
 	int j, written;
 	
 	while(i < binary->size) {
+		printf("%06zx: ", i);
+		
 		if(data[i] == 0xcb) {
 			++i;
 			printf("%-30s; 0xcb 0x%02x\n", bit_command_map[data[i]], data[i]);
@@ -345,6 +348,11 @@ static void disassemble(const BUFFER *binary) {
 			++i;
 			break;
 		case 1:
+			if(i + 1 >= binary->size) {
+				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbdasm_filename);
+				exit(1);
+			}
+			
 			written = printf("%s0x%02x%s", command_map[data[i]], data[i+1], command_closing(data[i]));
 			for(j = 0; j < 30 - written; ++j)
 				putchar(' ');
@@ -352,6 +360,11 @@ static void disassemble(const BUFFER *binary) {
 			i += 2;
 			break;
 		case 2:
+			if(i + 2 >= binary->size) {
+				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbdasm_filename);
+				exit(1);
+			}
+			
 			written = printf("%s0x%04x%s", command_map[data[i]], read_u16l(data + i + 1), command_closing(data[i]));
 			for(j = 0; j < 30 - written; ++j)
 				putchar(' ');
