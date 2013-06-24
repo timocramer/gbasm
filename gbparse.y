@@ -248,7 +248,12 @@ IDENT ':' { define_const($1, binary->write_pos); }
 	}
 | DS numexp { ds($2, 0); }
 | DS numexp ',' uint8 { ds($2, $4); }
-| SEEK numexp { printf("seek %d\n", $2); binary->write_pos = $2; }
+| SEEK numexp {
+	#ifdef DEBUG
+		printf("seek %d\n", $2);
+	#endif
+		binary->write_pos = $2;
+	}
 
 /** real instructions */
 /* instructions without arguments */
@@ -340,7 +345,14 @@ IDENT ':' { define_const($1, binary->write_pos); }
 /* bitwise functions with cb prefix */
 | cb_without_int singlereg { cb_function($1, $2); }
 
-| cb_with_int numexp ',' singlereg { cb_int_function($1, $2, $4); }
+| cb_with_int numexp ',' singlereg {
+		if($2 >= 8) { /* because */
+			fprintf(stderr, "%d:%d: the bit index has to be between 0 and 7\n",
+				@2.first_line, @2.first_column);
+			exit(1);
+		}
+		cb_int_function($1, $2, $4);
+	}
 ;
 
 cb_without_int:
@@ -385,8 +397,8 @@ B { $$ = 0; }
 | E { $$ = 3; }
 | H { $$ = 4; }
 | L { $$ = 5; }
-| '[' HL ']' { $$ = 6; };
-
+| '[' HL ']' { $$ = 6; }
+;
 singlereg:
 singlereg_without_a
 | A { $$ = 7; }
@@ -421,7 +433,8 @@ flag:
 NZ { $$ = 0; }
 | Z { $$ = 1; }
 | NC { $$ = 2; }
-| C { $$ = 3; };
+| C { $$ = 3; }
+;
 
 uint8: numexp { $$ = get_uint8($1); };
 uint16: numexp { $$ = get_uint16($1); };
@@ -430,10 +443,8 @@ numexp:
 NUM { $$ = $1; }
 | IDENT {
 		unsigned int *p = get_int($1);
-		if(p == NULL) {
-			printf("unknown variable %s\n", $1);
-			exit(1);
-		}
+		if(p == NULL)
+			yyerror("unknown variable");
 		$$ = *p;
 	}
 
@@ -474,9 +485,14 @@ NUM { $$ = $1; }
 
 string:
 STR { $$ = $1; }
-/* | string STR { $$ = concat_strings($1, $2); } */
+| string STR { $$ = concat_strings($1, $2); }
+/*
+The following two rules work, but only when "string STR" is disabled.
+Also error messages give false positions when they are enabled and a
+numexp is given when a string is expected.
 | string '+' string { $$ = concat_strings($1, $3); }
 | numexp '?' string ':' string { $$ = $1 ? $3 : $5; }
+*/
 ;
 
 uint8list:
@@ -497,7 +513,7 @@ string { $$ = $1; }
 %%
 
 static void yyerror(char const *s) {
-	fprintf(stderr, "%s\n", s);
+	fprintf(stderr, "%d:%d: %s\n", yylloc.first_line, yylloc.first_column, s);
 	exit(1);
 }
 
@@ -608,30 +624,29 @@ static void ret(unsigned char flag) {
 
 
 static void ld_simple(unsigned char dest, unsigned char source) {
-	unsigned char op;
-	
-	if(source == 6 && dest == 6) {
-		puts("ld [hl], [hl] is not possible!");
-		exit(1);
-	}
 #ifdef DEBUG
 	printf("ld %s, %s\n", SREG(dest), SREG(source));
 #endif
 	
-	op = 0x40;
-	op |= dest << 3;
-	op |= source;
+	if(source == 6 && dest == 6) {
+		yyerror("ld [hl], [hl] is not possible!");
+		exit(1);
+	}
 	
-	buffer_add_char(binary, op);
+	unsigned char opcode;
+	opcode = 0x40;
+	opcode |= dest << 3;
+	opcode |= source;
+	
+	buffer_add_char(binary, opcode);
 }
 
 static void ld_const(unsigned char dest, unsigned char c) {
-	unsigned char mem[2];
-	
 #ifdef DEBUG
 	printf("ld %s, %u\n", SREG(dest), c);
 #endif
 	
+	unsigned char mem[2];
 	mem[0] = 0x06 | (dest << 3);
 	mem[1] = c;
 	
@@ -654,8 +669,6 @@ static void ld_bcde(unsigned char dreg, unsigned char direction) {
 }
 
 static void ld_a_mem(unsigned char direction, uint16_t address) {
-	unsigned char mem[3];
-	
 #ifdef DEBUG
 	printf("ld %s[%u]%s\n",
 		direction == REGISTER_TO_MEMORY ? "" : "a, ",
@@ -663,6 +676,7 @@ static void ld_a_mem(unsigned char direction, uint16_t address) {
 		direction == REGISTER_TO_MEMORY ? ", a" : "");
 #endif
 	
+	unsigned char mem[3];
 	mem[0] = 0xea | (direction << 4);
 	mem[1] = address & 0xff;
 	mem[2] = address >> 8;
@@ -685,8 +699,6 @@ static void ldi_ldd(unsigned char operation, unsigned char direction) {
 }
 
 static void ldh_addr(unsigned char direction, unsigned char offset) {
-	unsigned char mem[2];
-	
 #ifdef DEBUG
 	printf("ldh %s%u%s\n",
 		direction == REGISTER_TO_MEMORY ? "" : "a, ",
@@ -694,6 +706,7 @@ static void ldh_addr(unsigned char direction, unsigned char offset) {
 		direction == REGISTER_TO_MEMORY ? ", a" : "");
 #endif
 	
+	unsigned char mem[2];
 	mem[0] = 0xe0 | (direction << 4);
 	mem[1] = offset;
 	
@@ -712,12 +725,11 @@ static void ldh_c(unsigned char direction) {
 }
 
 static void ld_const16(unsigned char dest, uint16_t c) {
-	unsigned char mem[3];
-	
 #ifdef DEBUG
 	printf("ld %s, %u\n", ALUDREG(dest), c);
 #endif
 	
+	unsigned char mem[3];
 	mem[0] = 0x01 | (dest << 4);
 	mem[1] = c & 0xff;
 	mem[2] = c >> 8;
@@ -726,12 +738,11 @@ static void ld_const16(unsigned char dest, uint16_t c) {
 }
 
 static void ldhl(unsigned char offset) {
-	unsigned char mem[2];
-	
 #ifdef DEBUG
 	printf("ldhl sp, %u\n", offset);
 #endif
 	
+	unsigned char mem[2];
 	mem[0] = 0xf8;
 	mem[1] = offset;
 	
@@ -739,12 +750,11 @@ static void ldhl(unsigned char offset) {
 }
 
 static void ld_sp_mem(uint16_t address) {
-	unsigned char mem[3];
-	
 #ifdef DEBUG
 	printf("ld [%u], sp\n", address);
 #endif
 	
+	unsigned char mem[3];
 	mem[0] = 0x08;
 	mem[1] = address & 0xff;
 	mem[2] = address >> 8;
@@ -766,12 +776,11 @@ static void aluop_simple(unsigned char operation, unsigned char reg) {
 }
 
 static void aluop_const(unsigned char operation, unsigned char c) {
-	unsigned char mem[2];
-	
 #ifdef DEBUG
 	printf("%s %u\n", ALUOP(operation), c);
 #endif
 	
+	unsigned char mem[2];
 	mem[0] = 0xc6 | (operation << 3);
 	mem[1] = c;
 	
@@ -790,12 +799,11 @@ static void add_hl(unsigned char dreg) {
 }
 
 static void add_sp(unsigned char n) {
-	unsigned char mem[2];
-	
 #ifdef DEBUG
 	printf("add sp, %u\n", n);
 #endif
 	
+	unsigned char mem[2];
 	mem[0] = 0xe8;
 	mem[1] = n;
 	
@@ -842,10 +850,8 @@ static void inc_dec_sreg(unsigned char operation, unsigned char reg) {
 static void rst(unsigned int addr) {
 	unsigned int tmp = addr >> 3;
 	
-	if(tmp << 3 != addr) {
-		puts("only 0x0, 0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 are allowed for rst");
-		exit(1);
-	}
+	if(tmp << 3 != addr)
+		yyerror("only 0x0, 0x8, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38 are allowed for rst");
 	
 #ifdef DEBUG
 	printf("rst %x\n", addr);
@@ -858,12 +864,11 @@ static void rst(unsigned int addr) {
 }
 
 static void cb_function(unsigned char function, unsigned char reg) {
-	unsigned char mem[2];
-	
 #ifdef DEBUG
 	printf("%s %s\n", CB_FUNC(function), SREG(reg));
 #endif
 	
+	unsigned char mem[2];
 	mem[0] = 0xcb;
 	mem[1] = (function << 3) | reg;
 	
@@ -871,16 +876,11 @@ static void cb_function(unsigned char function, unsigned char reg) {
 }
 
 static void cb_int_function(unsigned char function, unsigned int n, unsigned char reg) {
-	unsigned char mem[2];
-	
-	if(n >= 8) {
-		puts("the bit index has to be between 0 and 7");
-		exit(1);
-	}
 #ifdef DEBUG
 	printf("%s %u, %s\n", CB_INT_FUNC(function), n, SREG(reg));
 #endif
 	
+	unsigned char mem[2];
 	mem[0] = 0xcb;
 	mem[1] = (function << 6) | (n << 3) | reg;
 	

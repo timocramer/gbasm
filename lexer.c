@@ -26,11 +26,13 @@ static const struct element operators[] = {
 
 static int scan_operator(void) {
 	size_t i;
+	size_t len;
 	
 	for(i = 0; i < sizeof(operators) / sizeof(operators[0]); ++i) {
-		size_t len = strlen(operators[i].op);
+		len = strlen(operators[i].op);
 		if(strncasecmp(src, operators[i].op, len) == 0) {
 			src += len;
+			yylloc.last_column += len;
 #ifdef DEBUG
 			printf("yylex returns %s\n", operators[i].op);
 #endif
@@ -63,6 +65,7 @@ static void scan_uint(unsigned int base) {
 		i *= base;
 		i += c;
 		++src;
+		++yylloc.last_column;
 	}
 	/* maybe we should check for whitespace or something */
 	
@@ -94,6 +97,7 @@ static void scan_char(void) {
 	
 	if(*src == '\\') {
 		++src;
+		++yylloc.last_column;
 		if(*src == 0 || src[1] != '\'')
 			goto char_error;
 		
@@ -105,26 +109,39 @@ static void scan_char(void) {
 		goto char_error;
 	
 	yylval.integer = new_char;
+	
+	if(new_char == '\n') {
+		++yylloc.last_line;
+		yylloc.last_column = 1;
+	}
+	else
+		++yylloc.last_column;
+	++yylloc.last_column; /* for the '-char */
 	src += 2;
 }
 
 static int scan_int(void) {
 	if(*src == '\'') {
 		++src;
+		++yylloc.last_column;
 		scan_char();
 	}
 	else if(*src == '0') {
 		++src;
+		++yylloc.last_column;
 		if(*src == 'x') {
 			++src;
+			++yylloc.last_column;
 			scan_uint(16);
 		}
 		else if(*src == 'b') {
 			++src;
+			++yylloc.last_column;
 			scan_uint(2);
 		}
 		else {
 			--src; /* we go one char back to recognize a single '0' */
+			--yylloc.last_column;
 			scan_uint(8);
 		}
 	}
@@ -132,6 +149,10 @@ static int scan_int(void) {
 		scan_uint(10);
 	else
 		return 0;
+	
+#ifdef DEBUG
+	printf("yylex returns %d\n", yylval.integer);
+#endif
 	return NUM;
 }
 
@@ -143,15 +164,14 @@ static int scan_string(void) {
 	if(buf == NULL)
 		{};
 	
-	if(*src == '"')
+	if(*src == '"') {
+		++yylloc.last_column;
 		++src;
+	}
 	else
 		return 0;
 	
 	while(*src != '"') {
-// 		if(*src == '\n')
-// 			++*line;
-		
 		if(*src == 0) {
 			string_does_not_end:
 			return 0;
@@ -159,11 +179,13 @@ static int scan_string(void) {
 		}
 		
 		if(*src == '\\') {
+			++yylloc.last_column;
 			++src;
 			if(*src == 0)
 				goto string_does_not_end;
 			if(*src == '\n') { /* backslash newline means ignore newline */
-// 				++*line;
+				++yylloc.last_line;
+				yylloc.last_column = 1;
 				++src;
 				continue;
 			}
@@ -174,6 +196,12 @@ static int scan_string(void) {
 			new_char = *src;
 		
 		buffer_add_char(buf, new_char);
+		if(*src == '\n') {
+			++yylloc.last_line;
+			yylloc.last_column = 1;
+		}
+		else
+			++yylloc.last_column;
 		++src;
 	}
 	
@@ -185,6 +213,7 @@ static int scan_string(void) {
 	printf("yylex returns \"%s\"\n", yylval.string);
 #endif
 	
+	++yylloc.last_column;
 	++src; /* now src points to the char after the " */
 	return STR;
 }
@@ -266,12 +295,6 @@ static const struct element tokentable[] = {
 };
 #undef ENTRY
 
-static int identifier_char(char x) {
-	if(isalnum(x) || x == '_')
-		return 1;
-	return 0;
-}
-
 static int find_special_token(char *found) {
 	size_t i;
 	
@@ -286,6 +309,8 @@ static int find_special_token(char *found) {
 	return 0;
 }
 
+#define IDENTIFIER_CHAR(x) (isalnum(x) || (x) == '_')
+
 static int scan_identifier(void) {
 	BUFFER *buf;
 	int status;
@@ -298,10 +323,12 @@ static int scan_identifier(void) {
 		buffer_add_char(buf, *src);
 	else
 		return 0;
+	++yylloc.last_column;
 	++src;
 	
-	while(identifier_char(*src)) {
+	while(IDENTIFIER_CHAR(*src)) {
 		buffer_add_char(buf, *src);
+		++yylloc.last_column;
 		++src;
 	}
 	buffer_add_char(buf, 0);
@@ -324,17 +351,42 @@ static int scan_identifier(void) {
 int yylex(void) {
 	int status;
 	
+#ifdef DEBUG
+	printf("yylex is called\n"
+		"  first_line:   %d\n"
+		"  first_column: %d\n"
+		"  last_line:    %d\n"
+		"  last_column:  %d\n",
+		yylloc.first_line,
+		yylloc.first_column,
+		yylloc.last_line,
+		yylloc.last_column);
+#endif
+	
 	/* Skip white space. */
 	skip_white_space:
-	while(*src == ' ' || *src == '\t' || *src == '\n')
+	while(*src == ' ' || *src == '\t') {
+		++yylloc.last_column;
 		++src;
+	}
+	if(*src == '\n') {
+		++yylloc.last_line;
+		yylloc.last_column = 1;
+		++src;
+		goto skip_white_space;
+	}
 	
 	/* skip comments */
 	if(*src == ';') {
-		while(*src != '\n' && *src != 0)
+		while(*src != '\n' && *src != 0) {
+			++yylloc.last_column;
 			++src;
+		}
 		goto skip_white_space;
 	}
+	
+	yylloc.first_line = yylloc.last_line;
+	yylloc.first_column = yylloc.last_column;
 	
 	status = scan_operator();
 	if(status != 0)
@@ -353,5 +405,9 @@ int yylex(void) {
 		return status;
 	
 	/* Return a single char or, when end of string, 0 */
+	++yylloc.last_column;
+#ifdef DEBUG
+	printf("yylex returns '%c'\n", (*src == 0) ? '0' : *src);
+#endif
 	return *src++;
 }
