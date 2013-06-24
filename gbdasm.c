@@ -4,7 +4,7 @@
 
 #include "buffer.h"
 
-static char *gbdasm_filename;
+char *gbasm_filename;
 
 static const char command_map[256][12] = {
 "nop",
@@ -349,7 +349,7 @@ static void disassemble(const BUFFER *binary) {
 			break;
 		case 1:
 			if(i + 1 >= binary->size) {
-				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbdasm_filename);
+				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbasm_filename);
 				exit(1);
 			}
 			
@@ -361,7 +361,7 @@ static void disassemble(const BUFFER *binary) {
 			break;
 		case 2:
 			if(i + 2 >= binary->size) {
-				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbdasm_filename);
+				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbasm_filename);
 				exit(1);
 			}
 			
@@ -383,13 +383,11 @@ static BUFFER* read_file(const char *input_filename) {
 	
 	f = fopen(input_filename, "r");
 	if(f == NULL) {
-		fprintf(stderr, "%s: cannot open '%s'!\n", gbdasm_filename, input_filename);
+		fprintf(stderr, "%s: cannot open '%s'!\n", gbasm_filename, input_filename);
 		return NULL;
 	}
 	
 	b = buffer_new();
-	if(b == NULL)
-		return NULL;
 	
 	do {
 		n = fread(tmp, 1, BUFSIZE, f);
@@ -397,7 +395,7 @@ static BUFFER* read_file(const char *input_filename) {
 	} while(n == BUFSIZE);
 	
 	if(ferror(f)) {
-		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbdasm_filename, input_filename);
+		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbasm_filename, input_filename);
 		return NULL;
 	}
 	
@@ -407,10 +405,10 @@ static BUFFER* read_file(const char *input_filename) {
 int main(int argc, char **argv) {
 	BUFFER *binary;
 	
-	gbdasm_filename = argv[0];
+	gbasm_filename = argv[0];
 	
 	if(argc < 2) {
-		fprintf(stderr, "%s: please give a filename\n", gbdasm_filename);
+		fprintf(stderr, "%s: please give a filename\n", gbasm_filename);
 		return 1;
 	}
 	

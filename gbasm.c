@@ -4,6 +4,9 @@
 #include "buffer.h"
 #include "gbparse.h"
 #include "variables.h"
+#include "gbasm.h"
+
+char *gbasm_filename;
 
 char *src;
 BUFFER *binary;
@@ -14,9 +17,6 @@ static char* read_file(FILE *f) {
 	size_t n;
 	BUFFER *b = buffer_new();
 	char *r;
-	
-	if(b == NULL)
-		return NULL;
 	
 	do {
 		n = fread(tmp, 1, BUFSIZE, f);
@@ -52,11 +52,11 @@ static void write_binary_to_file(const char *out_filename) {
 int main(int argc, char **argv) {
 	FILE *read_from_here;
 	
+	gbasm_filename = argv[0];
+	
 	variables_init();
 	
 	binary = buffer_new();
-	if(binary == NULL)
-		return 1;
 	
 	if(argc < 2) {
 		puts("error: please give filename");

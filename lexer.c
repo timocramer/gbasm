@@ -161,8 +161,6 @@ static int scan_string(void) {
 	BUFFER *buf;
 	
 	buf = buffer_new();
-	if(buf == NULL)
-		{};
 	
 	if(*src == '"') {
 		++yylloc.last_column;
@@ -316,8 +314,6 @@ static int scan_identifier(void) {
 	int status;
 	
 	buf = buffer_new();
-	if(buf == NULL)
-		{};
 	
 	if(isalpha(*src))
 		buffer_add_char(buf, *src);

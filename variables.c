@@ -3,12 +3,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "errors.h"
 #include "variables.h"
-
-void alloc_error() {
-	puts("no memory");
-	exit(1);
-}
 
 enum vartype {INT, STRING};
 
@@ -36,7 +32,7 @@ static void resize_if_necessary(void) {
 		vars_alloc += ALLOC_CHUNK;
 		temp = realloc(vars, vars_alloc * sizeof(struct variable));
 		if(temp == NULL)
-			alloc_error();
+			no_memory();
 		vars = temp;
 	}
 }

@@ -174,8 +174,6 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 
 %initial-action {
 	tmpbuf = buffer_new();
-	if(tmpbuf == NULL)
-		{} /* no memory */
 }
 
 %union {

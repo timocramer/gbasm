@@ -1,15 +1,15 @@
 CFLAGS=-Wall -Wextra -O2 -pipe
 
-HEADERS=gbparse.h buffer.h variables.h
+HEADERS=gbasm.h gbparse.h buffer.h variables.h errors.h
 
 .PHONY: all clean
 
 all: gbasm gbdasm
 
-gbasm: gbasm.o gbparse.o buffer.o lexer.o variables.o
+gbasm: gbasm.o gbparse.o buffer.o lexer.o variables.o errors.o
 	$(CC) -o $@ $^
 
-gbdasm: gbdasm.o buffer.o
+gbdasm: gbdasm.o buffer.o errors.o
 	$(CC) -o $@ $^
 
 %.o: %.c $(HEADERS)

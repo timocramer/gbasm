@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "errors.h"
 #include "buffer.h"
 
 static void buffer_init(BUFFER *b) {
@@ -16,7 +17,7 @@ BUFFER* buffer_new(void) {
 	
 	b = malloc(sizeof(BUFFER));
 	if(b == NULL)
-		return NULL;
+		no_memory();
 	
 	buffer_init(b);
 	
@@ -25,16 +26,14 @@ BUFFER* buffer_new(void) {
 
 #define CHUNK_SIZE 128
 
-static int buffer_resize(BUFFER *b, size_t size) {
+static void buffer_resize(BUFFER *b, size_t size) {
 	char *temp;
 	
 	temp = realloc(b->data, size);
 	if(temp == NULL)
-		return 1;
+		no_memory();
 	b->data = temp;
 	b->alloc_size = size;
-	
-	return 0;
 }
 
 /* adds a char to the BUFFER
@@ -47,8 +46,7 @@ int buffer_add_char(BUFFER *b, char c) {
 	
 	if(b->write_pos >= b->alloc_size) {
 		to_alloc = CHUNK_SIZE * (b->write_pos / CHUNK_SIZE + 1);
-		if(buffer_resize(b, to_alloc))
-			return 1;
+		buffer_resize(b, to_alloc);
 	}
 	if(b->write_pos > b->size)
 		memset(b->data + b->size, 0, b->write_pos - b->size);
@@ -78,8 +76,7 @@ int buffer_add_mem(BUFFER *b, const void *m, size_t s) {
 	total_maximum = b->write_pos + s;
 	if(total_maximum >= b->alloc_size) {
 		to_alloc = CHUNK_SIZE * (total_maximum / CHUNK_SIZE + 1);
-		if(buffer_resize(b, to_alloc))
-			return 1;
+		buffer_resize(b, to_alloc);
 	}
 	if(b->write_pos > b->size)
 		memset(b->data + b->size, 0, b->write_pos - b->size);
