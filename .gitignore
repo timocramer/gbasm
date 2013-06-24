@@ -1,5 +1,6 @@
 *.o
 gbasm
+gbdasm
 gbparse.c
 gbparse.h
 a.gb
