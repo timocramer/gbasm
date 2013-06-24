@@ -189,7 +189,7 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 %token <string> STR
 %token <identifier> IDENT
 
-%type <intern> pushpopdreg aluoperation aludreg aludreg_without_sp singlereg singlereg_without_a flag cb_with_int cb_without_int single_instruction
+%type <intern> pushpopdreg aluoperation aludreg aludreg_without_sp singlereg singlereg_without_a flag cb_with_int cb_without_int single_instruction bcde
 
 %type <integer> numexp uint16list uint16 uint8 uint8list
 
@@ -301,10 +301,8 @@ IDENT ':' { define_const($1, binary->write_pos); }
 | LD A ',' '[' uint16 ']' { ld_a_mem(MEMORY_TO_REGISTER, $5); }
 | LD '[' uint16 ']' ',' A { ld_a_mem(REGISTER_TO_MEMORY, $3); }
 
-| LD '[' BC ']' ',' A { ld_bcde(0, REGISTER_TO_MEMORY); }
-| LD '[' DE ']' ',' A { ld_bcde(1, REGISTER_TO_MEMORY); }
-| LD A ',' '[' BC ']' { ld_bcde(0, MEMORY_TO_REGISTER); }
-| LD A ',' '[' DE ']' { ld_bcde(1, MEMORY_TO_REGISTER); }
+| LD '[' bcde ']' ',' A { ld_bcde($3, REGISTER_TO_MEMORY); }
+| LD A ',' '[' bcde ']' { ld_bcde($5, MEMORY_TO_REGISTER); }
 
 | LDI '[' HL ']' ',' A { ldi_ldd(INCREMENT, REGISTER_TO_MEMORY); }
 | LDI A ',' '[' HL ']' { ldi_ldd(INCREMENT, MEMORY_TO_REGISTER); }
@@ -407,19 +405,10 @@ ADD { $$ = 0; }
 | CP { $$ = 7; }
 ;
 
-aludreg_without_sp:
-BC { $$ = 0; }
-| DE { $$ = 1; }
-| HL { $$ = 2; }
-;
-aludreg:
-aludreg_without_sp
-| SP { $$ = 3; }
-;
-pushpopdreg:
-aludreg_without_sp
-| AF { $$ = 3; }
-;
+bcde: BC { $$ = 0; } | DE { $$ = 1; };
+aludreg_without_sp: bcde | HL { $$ = 2; };
+aludreg:     aludreg_without_sp | SP { $$ = 3; };
+pushpopdreg: aludreg_without_sp | AF { $$ = 3; };
 
 flag:
 NZ { $$ = 0; }
