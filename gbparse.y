@@ -133,6 +133,7 @@ DEFINE_GET_UINT(16)
 
 static void define_const(const char *, unsigned int);
 static void ds(unsigned int, unsigned char);
+static void write_bytes(const char *, size_t);
 
 static void jp(int, unsigned char, uint16_t);
 static void jr(int, unsigned char, unsigned char);
@@ -226,24 +227,15 @@ IDENT ':' { define_const($1, binary->write_pos); }
 | '#' DEFINE IDENT numexp { define_const($3, $4); }
 
 | DM stringlist {
-	#ifdef DEBUG
-		printf("dm \"%s\"\n", $2);
-	#endif
-		buffer_add_str(binary, $2);
+		write_bytes($2, strlen($2));
 		free($2);
 	}
 | DB uint8list {
-	#ifdef DEBUG
-		printf("db %s\n", tmpbuf->data); /* %s because I test this with 0-terminated data */
-	#endif
-		buffer_add_mem(binary, tmpbuf->data, tmpbuf->size);
+		write_bytes(tmpbuf->data, tmpbuf->size);
 		buffer_reset(tmpbuf);
 	}
 | DW uint16list {
-	#ifdef DEBUG
-		printf("dw %s\n", tmpbuf->data); /* %s because I test this with 0-terminated data */
-	#endif
-		buffer_add_mem(binary, tmpbuf->data, tmpbuf->size);
+		write_bytes(tmpbuf->data, tmpbuf->size);
 		buffer_reset(tmpbuf);
 	}
 | DS numexp { ds($2, 0); }
@@ -545,6 +537,23 @@ static void ds(unsigned int size, unsigned char value) {
 	memset(p, value, size);
 	buffer_add_mem(binary, p, size);
 }
+
+static void write_bytes(const char *mem, size_t length) {
+#ifdef DEBUG
+	if(length == 0)
+		puts("db");
+	else {
+		size_t i;
+		
+		printf("db %u", mem[0]);
+		for(i = 1; i < length; ++i)
+			printf(", %u", mem[i]);
+		putchar('\n');
+	}
+#endif
+	buffer_add_mem(binary, mem, length);
+}
+
 
 static void jp(int has_flag, unsigned char flag, uint16_t address) {
 	unsigned char mem[3];
