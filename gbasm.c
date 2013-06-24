@@ -4,7 +4,9 @@
 #include "buffer.h"
 #include "gbparse.h"
 #include "variables.h"
+#include "errors.h"
 #include "gbasm.h"
+
 
 char *gbasm_filename;
 
@@ -12,11 +14,18 @@ char *src;
 BUFFER *binary;
 
 #define BUFSIZE 512
-static char* read_file(FILE *f) {
+static char* read_file(const char *input_filename) {
+	FILE *f;
 	char tmp[BUFSIZE];
 	size_t n;
 	BUFFER *b = buffer_new();
 	char *r;
+	
+	f = fopen(input_filename, "r");
+	if(f == NULL) {
+		fprintf(stderr, "%s: '%s' cannot be opened\n", gbasm_filename, input_filename);
+		return NULL;
+	}
 	
 	do {
 		n = fread(tmp, 1, BUFSIZE, f);
@@ -24,7 +33,7 @@ static char* read_file(FILE *f) {
 	} while(n == BUFSIZE);
 	
 	if(ferror(f)) {
-		puts("an error occured!");
+		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbasm_filename, input_filename);
 		return NULL;
 	}
 	
@@ -44,14 +53,12 @@ static void write_binary_to_file(const char *out_filename) {
 	
 	written = fwrite(binary->data, 1, binary->size, f);
 	if(written != binary->size)
-		puts("binary was not written successfully");
+		gbasm_error("binary was not written successfully");
 	
 	fclose(f);
 }
 
 int main(int argc, char **argv) {
-	FILE *read_from_here;
-	
 	gbasm_filename = argv[0];
 	
 	variables_init();
@@ -59,16 +66,13 @@ int main(int argc, char **argv) {
 	binary = buffer_new();
 	
 	if(argc < 2) {
-		puts("error: please give filename");
+		gbasm_error("no input files");
 		return 1;
 	}
 	
-	read_from_here = fopen(argv[1], "r");
-	if(read_from_here == NULL)
+	src = read_file(argv[1]);
+	if(src == NULL)
 		return 1;
-	
-	src = read_file(read_from_here);
-// 	puts(src);
 	
 	yyparse();
 	

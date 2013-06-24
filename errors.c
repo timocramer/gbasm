@@ -5,6 +5,10 @@
 #include "errors.h"
 
 void no_memory(void) {
-	fprintf(stderr, "%s: not enough memory!\n", gbasm_filename);
+	gbasm_error("not enough memory!");
+}
+
+void gbasm_error(const char *message) {
+	fprintf(stderr, "%s: error: %s\n", gbasm_filename, message);
 	exit(1);
 }

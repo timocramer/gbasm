@@ -1,10 +1,13 @@
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 
 #include "errors.h"
 #include "variables.h"
+
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 enum vartype {INT, STRING};
 

@@ -1,10 +1,14 @@
-#include <stdio.h>
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
 
 #include "gbparse.h"
 #include "buffer.h"
+#include "errors.h"
+
+#ifdef DEBUG
+#include <stdio.h>
+#endif
 
 extern char *src;
 
@@ -91,7 +95,7 @@ static void scan_char(void) {
 	
 	if(*src == 0 || src[1] == 0) {
 		char_error:
-		puts("character constant does not end or is too long");
+		gbasm_error("character constant does not end or is too long");
 		return;
 	}
 	
@@ -172,8 +176,7 @@ static int scan_string(void) {
 	while(*src != '"') {
 		if(*src == 0) {
 			string_does_not_end:
-			return 0;
-// 			gbasm_error_line(filename, starting_line, "String does not end");
+			gbasm_error("String does not end!");
 		}
 		
 		if(*src == '\\') {

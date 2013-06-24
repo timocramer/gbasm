@@ -383,7 +383,7 @@ static BUFFER* read_file(const char *input_filename) {
 	
 	f = fopen(input_filename, "r");
 	if(f == NULL) {
-		fprintf(stderr, "%s: cannot open '%s'!\n", gbasm_filename, input_filename);
+		fprintf(stderr, "%s: '%s' cannot be opened\n", gbasm_filename, input_filename);
 		return NULL;
 	}
 	
