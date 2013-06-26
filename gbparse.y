@@ -8,6 +8,7 @@
 
 #include "buffer.h"
 #include "variables.h"
+#include "errors.h"
 #include "gbparse.h"
 
 extern int yylex(void);
@@ -516,7 +517,7 @@ static char* concat_strings(char *a, char *b) {
 	char *t = realloc(a, strlen(a) + strlen(b) + 1);
 	
 	if(t == NULL)
-		{}; /* error */
+		no_memory();
 	
 	strcat(t, b);
 	free(b);
