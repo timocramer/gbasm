@@ -352,7 +352,7 @@ IDENT ':' {
 | cb_without_int singlereg { cb_function($1, $2); }
 
 | cb_with_int numexp ',' singlereg {
-		if($2 >= 8) { /* because */
+		if($2 >= 8) {
 			fprintf(stderr, "%d:%d: the bit index has to be between 0 and 7\n",
 				@2.first_line, @2.first_column);
 			exit(1);
