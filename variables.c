@@ -9,17 +9,9 @@
 #include <stdio.h>
 #endif
 
-enum vartype {INT, STRING};
-
-union value {
-	unsigned int i;
-	char *s;
-};
-
 struct variable {
-	enum vartype type;
 	const char *name;
-	union value value;
+	unsigned int value;
 };
 
 #define ALLOC_CHUNK 64
@@ -47,50 +39,32 @@ void variables_init(void) {
 	resize_if_necessary();
 }
 
-
-char* get_string(const char *name) {
-	size_t i;
-	
-	for(i = 0; i < vars_size; ++i)
-		if((vars[i].type == STRING) && (strcmp(name, vars[i].name) == 0))
-			return vars[i].value.s;
-	return NULL;
-}
-
 unsigned int* get_int(const char *name) {
 	size_t i;
 	
 	for(i = 0; i < vars_size; ++i)
-		if((vars[i].type == INT) && (strcmp(name, vars[i].name) == 0))
-			return &(vars[i].value.i);
+		if(strcmp(name, vars[i].name) == 0)
+			return &(vars[i].value);
 	return NULL;
 }
 
-
-static int set_generic(const char *name, enum vartype type, union value value) {
+int set_int(const char *name, unsigned int value) {
 	size_t i;
+	char *newname;
 	
 	for(i = 0; i < vars_size; ++i)
 		if(strcmp(name, vars[i].name) == 0)
 			return 1; /* multiple definition */
 	resize_if_necessary();
+	
+	newname = strdup(name);
+	if(newname == NULL)
+		no_memory();
+	
 	vars[vars_size].value = value;
-	vars[vars_size].type = type;
-	vars[vars_size].name = name;
+	vars[vars_size].name = newname;
 	++vars_size;
 	return 0;
-}
-
-int set_string(const char *name, char *str) {
-	union value value = {.s = str};
-	
-	return set_generic(name, STRING, value);
-}
-
-int set_int(const char *name, unsigned int val) {
-	union value value = {.i = val};
-	
-	return set_generic(name, INT, value);
 }
 
 #ifdef DEBUG
@@ -99,24 +73,12 @@ void variables_inspect(void) {
 	
 	printf("===Variables===\nSize: %zu\nAllocated: %zu\n", vars_size, vars_alloc);
 	for(i = 0; i < vars_size; ++i) {
-		if(vars[i].type == INT) {
-			printf("Variable %zu:\n"
-					"\ttype: INT\n"
-					"\tname: %s\n"
-					"\tvalue %d\n",
-					i,
-					vars[i].name,
-					vars[i].value.i);
-		}
-		else {
-			printf("Variable %zu:\n"
-					"\ttype: STRING\n"
-					"\tname: %s\n"
-					"\tvalue %s\n",
-					i,
-					vars[i].name,
-					vars[i].value.s);
-		}
+		printf("Variable %zu:\n"
+				"\tname: %s\n"
+				"\tvalue %d\n",
+				i,
+				vars[i].name,
+				vars[i].value);
 	}
 }
 #endif
