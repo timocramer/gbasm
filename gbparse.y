@@ -224,9 +224,10 @@ IDENT ':' {
 	#ifdef DEBUG
 		printf("%s:\n", $1);
 	#endif
-		if(set_int($1, binary->write_pos)) {
+		if(store_int($1, binary->write_pos)) {
 			fprintf(stderr, "%d:%d: multiple definition of label '%s'\n",
 					@1.first_line, @1.first_column, $1);
+			exit(1);
 		}
 	}
 /* constant definition */
@@ -234,9 +235,10 @@ IDENT ':' {
 	#ifdef DEBUG
 		printf("#define %s %u\n", $3, $4);
 	#endif
-		if(set_int($3, $4)) {
+		if(store_int($3, $4)) {
 			fprintf(stderr, "%d:%d: multiple definition of constant '%s'\n",
 					@3.first_line, @3.first_column, $3);
+			exit(1);
 		}
 	}
 
@@ -437,7 +439,7 @@ uint16: numexp { $$ = get_uint16($1); };
 numexp:
 NUM { $$ = $1; }
 | IDENT {
-		unsigned int *p = get_int($1);
+		unsigned int *p = load_int($1);
 		if(p == NULL)
 			yyerror("unknown variable");
 		$$ = *p;

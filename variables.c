@@ -39,7 +39,7 @@ void variables_init(void) {
 	resize_if_necessary();
 }
 
-unsigned int* get_int(const char *name) {
+unsigned int* load_int(const char *name) {
 	size_t i;
 	
 	for(i = 0; i < vars_size; ++i)
@@ -48,7 +48,7 @@ unsigned int* get_int(const char *name) {
 	return NULL;
 }
 
-int set_int(const char *name, unsigned int value) {
+int store_int(const char *name, unsigned int value) {
 	size_t i;
 	char *newname;
 	
