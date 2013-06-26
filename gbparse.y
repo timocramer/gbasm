@@ -131,7 +131,6 @@ DEFINE_GET_UINT(16)
 #define HAS_FLAG 1
 #define NO_FLAG 0
 
-static void define_const(const char *, unsigned int);
 static void ds(unsigned int, unsigned char);
 static void write_bytes(const char *, size_t);
 
@@ -220,9 +219,25 @@ commands:
 command:
 /** commands to the assembler */
 /* label definition */
-IDENT ':' { define_const($1, binary->write_pos); }
+IDENT ':' {
+	#ifdef DEBUG
+		printf("%s:\n", $1);
+	#endif
+		if(set_int($1, binary->write_pos)) {
+			fprintf(stderr, "%d:%d: multiple definition of label '%s'\n",
+					@1.first_line, @1.first_column, $1);
+		}
+	}
 /* constant definition */
-| '#' DEFINE IDENT numexp { define_const($3, $4); }
+| '#' DEFINE IDENT numexp {
+	#ifdef DEBUG
+		printf("#define %s %u\n", $3, $4);
+	#endif
+		if(set_int($3, $4)) {
+			fprintf(stderr, "%d:%d: multiple definition of constant '%s'\n",
+					@3.first_line, @3.first_column, $3);
+		}
+	}
 
 | DM stringlist {
 		write_bytes($2, strlen($2));
@@ -496,13 +511,6 @@ static void yyerror(char const *s) {
 	exit(1);
 }
 
-static void define_const(const char *name, unsigned int x) {
-#ifdef DEBUG
-	printf("#define %s %u\n", name, x);
-#endif
-	set_int(name, x);
-	/* TODO: error handling */
-}
 
 static char* concat_strings(char *a, char *b) {
 	char *t = realloc(a, strlen(a) + strlen(b) + 1);
