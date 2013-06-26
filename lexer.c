@@ -406,7 +406,10 @@ int yylex(void) {
 	/* Return a single char or, when end of string, 0 */
 	++yylloc.last_column;
 #ifdef DEBUG
-	printf("yylex returns '%c'\n", (*src == 0) ? '0' : *src);
+	if(*src == 0)
+		printf("yylex returns EOF\n");
+	else
+		printf("yylex returns '%c'\n", *src);
 #endif
 	return *src++;
 }
