@@ -536,16 +536,13 @@ static void ds(unsigned int size, unsigned char value) {
 
 static void write_bytes(const char *mem, size_t length) {
 #ifdef DEBUG
-	if(length == 0)
-		puts("db");
-	else {
-		size_t i;
-		
-		printf("db %u", mem[0]);
-		for(i = 1; i < length; ++i)
-			printf(", %u", mem[i]);
-		putchar('\n');
-	}
+	size_t i;
+	
+	printf("db %u", mem[0]);
+	for(i = 1; i < length; ++i)
+		printf(", %u", mem[i]);
+	putchar('\n');
+	
 #endif
 	buffer_add_mem(binary, mem, length);
 }
