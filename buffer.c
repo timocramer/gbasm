@@ -36,13 +36,11 @@ static void buffer_resize(BUFFER *b, size_t size) {
 	b->alloc_size = size;
 }
 
-/* adds a char to the BUFFER
-returns 1 on success, 0 otherwise */
-int buffer_add_char(BUFFER *b, char c) {
+void buffer_add_char(BUFFER *b, char c) {
 	size_t to_alloc;
 	
 	if(b == NULL)
-		return 1;
+		return;
 	
 	if(b->write_pos >= b->alloc_size) {
 		to_alloc = CHUNK_SIZE * (b->write_pos / CHUNK_SIZE + 1);
@@ -55,23 +53,19 @@ int buffer_add_char(BUFFER *b, char c) {
 	b->write_pos++;
 	if(b->write_pos > b->size)
 		b->size = b->write_pos;
-	
-	return 0;
 }
 
-/* adds a string but not the \0 at the end to the BUFFER
-returns 1 on success, 0 otherwise */
-int buffer_add_str(BUFFER *b, const char *s) {
-	return buffer_add_mem(b, s, strlen(s));
+/* adds a string but not the \0 at the end to the BUFFER */
+void buffer_add_str(BUFFER *b, const char *s) {
+	buffer_add_mem(b, s, strlen(s));
 }
 
-/* adds a chunk of memory with size s to the BUFFER
-returns 1 on success, 0 otherwise */
-int buffer_add_mem(BUFFER *b, const void *m, size_t s) {
+/* adds a chunk of memory with size s to the BUFFER */
+void buffer_add_mem(BUFFER *b, const void *m, size_t s) {
 	size_t total_maximum, to_alloc;
 	
 	if(b == NULL || m == NULL)
-		return 1;
+		return;
 	
 	total_maximum = b->write_pos + s;
 	if(total_maximum >= b->alloc_size) {
@@ -85,12 +79,11 @@ int buffer_add_mem(BUFFER *b, const void *m, size_t s) {
 	b->write_pos = total_maximum;
 	if(total_maximum > b->size)
 		b->size = total_maximum;
-	
-	return 0;
 }
 
-int buffer_add_u16l(BUFFER *b, uint16_t i) {
-	return buffer_add_char(b, i & 0xff) || buffer_add_char(b, i >> 8);
+void buffer_add_u16l(BUFFER *b, uint16_t i) {
+	buffer_add_char(b, i & 0xff);
+	buffer_add_char(b, i >> 8);
 }
 
 /* frees the BUFFER and the internal data array */

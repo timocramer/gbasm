@@ -13,11 +13,11 @@ typedef struct {
 
 BUFFER* buffer_new(void);
 
-int buffer_add_char(BUFFER *, char);
-int buffer_add_str(BUFFER *, const char *);
-int buffer_add_mem(BUFFER *, const void *, size_t);
+void buffer_add_char(BUFFER *, char);
+void buffer_add_str(BUFFER *, const char *);
+void buffer_add_mem(BUFFER *, const void *, size_t);
 
-int buffer_add_u16l(BUFFER *, uint16_t);
+void buffer_add_u16l(BUFFER *, uint16_t);
 
 void buffer_destroy(BUFFER *);
 void buffer_destroy_keep(BUFFER *);
