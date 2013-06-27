@@ -327,6 +327,8 @@ static unsigned int byte_arguments(unsigned char opcode) {
 	return 0;
 }
 
+#define WIDTH 20
+
 static void disassemble(const BUFFER *binary) {
 	unsigned char *data = (unsigned char *) binary->data;
 	size_t i = 0;
@@ -337,14 +339,14 @@ static void disassemble(const BUFFER *binary) {
 		
 		if(data[i] == 0xcb) {
 			++i;
-			printf("%-30s; 0xcb 0x%02x\n", bit_command_map[data[i]], data[i]);
+			printf("%-20s; 0xcb 0x%02x\n", bit_command_map[data[i]], data[i]);
 			++i;
 			continue;
 		}
 		
 		switch(byte_arguments(data[i])) {
 		case 0:
-			printf("%-30s; 0x%02x\n", command_map[data[i]], data[i]);
+			printf("%-20s; 0x%02x\n", command_map[data[i]], data[i]);
 			++i;
 			break;
 		case 1:
@@ -354,7 +356,7 @@ static void disassemble(const BUFFER *binary) {
 			}
 			
 			written = printf("%s0x%02x%s", command_map[data[i]], data[i+1], command_closing(data[i]));
-			for(j = 0; j < 30 - written; ++j)
+			for(j = 0; j < WIDTH - written; ++j)
 				putchar(' ');
 			printf("; 0x%02x 0x%02x\n", data[i], data[i+1]);
 			i += 2;
@@ -366,7 +368,7 @@ static void disassemble(const BUFFER *binary) {
 			}
 			
 			written = printf("%s0x%04x%s", command_map[data[i]], read_u16l(data + i + 1), command_closing(data[i]));
-			for(j = 0; j < 30 - written; ++j)
+			for(j = 0; j < WIDTH - written; ++j)
 				putchar(' ');
 			printf("; 0x%02x 0x%02x 0x%02x\n", data[i], data[i+1], data[i+2]);
 			i += 3;
