@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 void variables_init(void);
+void variables_destroy(void);
 
 unsigned int* load_int(const char *);
 

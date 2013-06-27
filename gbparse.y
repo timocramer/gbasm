@@ -229,6 +229,7 @@ IDENT ':' {
 					@1.first_line, @1.first_column, $1);
 			exit(1);
 		}
+		free($1);
 	}
 /* constant definition */
 | '#' DEFINE IDENT numexp {
@@ -240,6 +241,7 @@ IDENT ':' {
 					@3.first_line, @3.first_column, $3);
 			exit(1);
 		}
+		free($3);
 	}
 
 | DM stringlist {
@@ -442,6 +444,7 @@ NUM { $$ = $1; }
 		unsigned int *p = load_int($1);
 		if(p == NULL)
 			yyerror("unknown variable");
+		free($1);
 		$$ = *p;
 	}
 

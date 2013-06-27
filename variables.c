@@ -10,7 +10,7 @@
 #endif
 
 struct variable {
-	const char *name;
+	char *name;
 	unsigned int value;
 };
 
@@ -37,6 +37,14 @@ void variables_init(void) {
 	vars_size = 0;
 	vars_alloc = 0;
 	resize_if_necessary();
+}
+
+void variables_destroy(void) {
+	size_t i;
+	
+	for(i = 0; i < vars_size; ++i)
+		free(vars[i].name);
+	free(vars);
 }
 
 unsigned int* load_int(const char *name) {

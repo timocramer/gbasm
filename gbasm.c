@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "buffer.h"
 #include "gbparse.h"
@@ -36,6 +37,7 @@ static char* read_file(const char *input_filename) {
 		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbasm_filename, input_filename);
 		return NULL;
 	}
+	fclose(f);
 	
 	buffer_add_char(b, 0);
 	r = b->data;
@@ -59,6 +61,8 @@ static void write_binary_to_file(const char *out_filename) {
 }
 
 int main(int argc, char **argv) {
+	char *srcbase;
+	
 	gbasm_filename = argv[0];
 	
 	variables_init();
@@ -73,10 +77,17 @@ int main(int argc, char **argv) {
 	src = read_file(argv[1]);
 	if(src == NULL)
 		return 1;
+	srcbase = src;
 	
 	yyparse();
 	
+	
 	write_binary_to_file("a.gb");
+	
+	/* clean up a bit */
+	free(srcbase);
+	variables_destroy();
+	buffer_destroy(binary);
 	
 	return 0;
 }
