@@ -296,11 +296,21 @@ static const struct element tokentable[] = {
 };
 #undef ENTRY
 
-static int find_special_token(char *found) {
+#define IDENTIFIER_CHAR(x) (isalnum(x) || (x) == '_')
+
+static int find_special_token() {
 	size_t i;
+	size_t len;
+	
+	/* one little check before we go into the for loop */
+	if(!IDENTIFIER_CHAR(*src))
+		return 0;
 	
 	for(i = 0; i < sizeof(tokentable) / sizeof(tokentable[0]); ++i) {
-		if(strcasecmp(found, tokentable[i].op) == 0) {
+		len = strlen(tokentable[i].op);
+		if(strncasecmp(src, tokentable[i].op, len) == 0 && !IDENTIFIER_CHAR(src[len])) {
+			src += len;
+			yylloc.last_column += len;
 #ifdef DEBUG
 			printf("yylex returns token %s\n", tokentable[i].op);
 #endif
@@ -310,16 +320,16 @@ static int find_special_token(char *found) {
 	return 0;
 }
 
-#define IDENTIFIER_CHAR(x) (isalnum(x) || (x) == '_')
-
 static int scan_identifier(void) {
 	BUFFER *buf;
-	int status;
 	
-	buf = buffer_new();
-	
-	if(isalpha(*src))
+	/* as the first char, no numbers are allowed */
+	if(isalpha(*src) || *src == '_') {
+		buf = buffer_new();
+		if(buf == NULL)
+			no_memory();
 		buffer_add_char(buf, *src);
+	}
 	else
 		return 0;
 	++yylloc.last_column;
@@ -331,12 +341,6 @@ static int scan_identifier(void) {
 		++src;
 	}
 	buffer_add_char(buf, 0);
-	
-	status = find_special_token(buf->data);
-	if(status) {
-		buffer_destroy(buf);
-		return status;
-	}
 	
 	yylval.identifier = buf->data;
 	buffer_destroy_keep(buf);
@@ -396,6 +400,10 @@ int yylex(void) {
 		return status;
 	
 	status = scan_string();
+	if(status != 0)
+		return status;
+	
+	status = find_special_token();
 	if(status != 0)
 		return status;
 	
