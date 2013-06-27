@@ -166,8 +166,6 @@ static int scan_string(void) {
 	
 	if(*src == '"') {
 		buf = buffer_new();
-		if(buf == NULL)
-			no_memory();
 		++yylloc.last_column;
 		++src;
 	}
@@ -327,8 +325,6 @@ static int scan_identifier(void) {
 	/* as the first char, no numbers are allowed */
 	if(isalpha(*src) || *src == '_') {
 		buf = buffer_new();
-		if(buf == NULL)
-			no_memory();
 		buffer_add_char(buf, *src);
 	}
 	else
