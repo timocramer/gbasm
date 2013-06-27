@@ -164,9 +164,10 @@ static int scan_string(void) {
 	char new_char;
 	BUFFER *buf;
 	
-	buf = buffer_new();
-	
 	if(*src == '"') {
+		buf = buffer_new();
+		if(buf == NULL)
+			no_memory();
 		++yylloc.last_column;
 		++src;
 	}
