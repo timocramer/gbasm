@@ -55,7 +55,7 @@ static char get_rom_size_code(size_t size) {
 		++x;
 	}
 	if(x > 6) /* largest known is 2 MB */
-		fprintf(stderr, "%s: The assembled binary is most certainly too large\n", gbasm_filename);
+		gbasm_warning("The assembled binary is most certainly too large");
 	return x;
 }
 
@@ -63,7 +63,7 @@ static void warn_if_overwrite(void) {
 	size_t i;
 	for(i = 0x100; i < 0x150; ++i) {
 		if(binary->data[i] != 0) {
-			fprintf(stderr, "%s: There is data that is overwritten by metadata\n", gbasm_filename);
+			gbasm_warning("There is data that is overwritten by metadata");
 			return;
 		}
 	}
@@ -100,7 +100,7 @@ static void write_metadata(const char *game_name) {
 	
 	strncpy(m + GAME_NAME_OFFSET, game_name, GAME_NAME_MAX_LENGTH);
 	if(strlen(game_name) > GAME_NAME_MAX_LENGTH)
-		fprintf(stderr, "%s: Game name is too long and will be truncated\n", gbasm_filename);
+		gbasm_warning("Game name is too long and will be truncated");
 	
 	m[0x48] = get_rom_size_code(binary->size);
 	

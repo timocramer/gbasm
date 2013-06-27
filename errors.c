@@ -12,3 +12,7 @@ void gbasm_error(const char *message) {
 	fprintf(stderr, "%s: error: %s\n", gbasm_filename, message);
 	exit(1);
 }
+
+void gbasm_warning(const char *message) {
+	fprintf(stderr, "%s: warning: %s\n", gbasm_filename, message);
+}
