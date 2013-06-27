@@ -61,7 +61,7 @@ static char get_rom_size_code(size_t size) {
 
 static void warn_if_overwrite(void) {
 	size_t i;
-	for(i = 0x100; i < 0x150; ++i) {
+	for(i = 0x100; i < 0x150 && i < binary->size; ++i) {
 		if(binary->data[i] != 0) {
 			gbasm_warning("There is data that is overwritten by metadata");
 			return;
