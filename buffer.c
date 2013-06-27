@@ -5,13 +5,6 @@
 #include "errors.h"
 #include "buffer.h"
 
-static void buffer_init(BUFFER *b) {
-	b->data = NULL;
-	b->size = 0;
-	b->alloc_size = 0;
-	b->write_pos = 0;
-}
-
 BUFFER* buffer_new(void) {
 	BUFFER *b;
 	
@@ -19,7 +12,10 @@ BUFFER* buffer_new(void) {
 	if(b == NULL)
 		no_memory();
 	
-	buffer_init(b);
+	b->data = NULL;
+	b->size = 0;
+	b->alloc_size = 0;
+	b->write_pos = 0;
 	
 	return b;
 }
@@ -101,6 +97,7 @@ void buffer_destroy_keep(BUFFER *b) {
 }
 
 void buffer_reset(BUFFER *b) {
-	free(b->data);
-	buffer_init(b);
+	memset(b->data, 0, b->alloc_size);
+	b->size = 0;
+	b->write_pos = 0;
 }
