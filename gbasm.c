@@ -92,9 +92,9 @@ static void write_metadata(const char *game_name) {
 		0, // RAM Size: 0
 		1, // Destination Code: Non-Japanese
 		0, // Licensee Code, I try it with a 0
-		0, // Mask ROM Version number (Usually $00)
+		0, // Mask ROM Version number (Usually 0x00)
 		0, // Complement check, this is set dynamically
-		// (The sum of bytes $34 to $4d plus 25 has to be zero)
+		// (The sum of bytes 0x34 to 0x4d plus 25 has to be zero)
 		0xC0,0x1A // Checksum (GameBoy ignores this value.)
 	};
 	
