@@ -1,4 +1,4 @@
 - calling labels before definition
-- command line interface
-- writing metadata
-- error handling
+- bank switching & address calculation
+- include command
+- maybe small optimizations (like using JR instead of JP when it's in range)
