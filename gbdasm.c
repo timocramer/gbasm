@@ -5,6 +5,7 @@
 #include "buffer.h"
 
 char *gbasm_filename;
+char *input_filename;
 
 static const char command_map[256][12] = {
 "nop",
@@ -414,7 +415,8 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	binary = read_file(argv[1]);
+	input_filename = argv[1];
+	binary = read_file(input_filename);
 	if(binary == NULL)
 		return 1;
 	
