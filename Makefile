@@ -2,7 +2,10 @@ CFLAGS=-Wall -Wextra -O2 -pipe
 
 HEADERS=gbasm.h gbparse.h buffer.h variables.h errors.h
 
-.PHONY: all clean
+PREFIX=/usr/local
+BINDIR=$(PREFIX)/bin
+
+.PHONY: all clean install
 
 all: gbasm gbdasm
 
@@ -20,3 +23,6 @@ gbparse.c gbparse.h: gbparse.y
 
 clean:
 	$(RM) *.o gbparse.c gbparse.h gbasm gbdasm
+
+install:
+	install -s gbasm gbdasm $(BINDIR)
