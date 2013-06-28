@@ -94,23 +94,28 @@ static void scan_char(void) {
 	char new_char;
 	
 	if(*src == 0 || src[1] == 0) {
-		char_error:
-		gbasm_error("character constant does not end or is too long");
+		does_not_end:
+		location_error(yylloc.first_line, yylloc.first_column, "character constant does not end");
 		return;
 	}
 	
 	if(*src == '\\') {
 		++src;
 		++yylloc.last_column;
-		if(*src == 0 || src[1] != '\'')
-			goto char_error;
+		if(src[1] == 0)
+			goto does_not_end;
+		if(src[1] != '\'')
+			goto too_long;
 		
 		new_char = slash_char(*src);
 	}
 	else if(src[1] == '\'')
 		new_char = *src;
-	else
-		goto char_error;
+	else {
+		too_long:
+		location_error(yylloc.first_line, yylloc.first_column, "character constant is too long");
+		return;
+	}
 	
 	yylval.integer = new_char;
 	
@@ -175,7 +180,7 @@ static int scan_string(void) {
 	while(*src != '"') {
 		if(*src == 0) {
 			string_does_not_end:
-			gbasm_error("String does not end!");
+			location_error(yylloc.first_line, yylloc.first_column, "String does not end");
 		}
 		
 		if(*src == '\\') {
