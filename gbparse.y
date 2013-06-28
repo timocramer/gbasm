@@ -9,6 +9,7 @@
 #include "buffer.h"
 #include "variables.h"
 #include "errors.h"
+#include "gbasm.h"
 #include "gbparse.h"
 
 extern int yylex(void);
@@ -514,7 +515,7 @@ string { $$ = $1; }
 %%
 
 static void yyerror(char const *s) {
-	fprintf(stderr, "%d:%d: %s\n", yylloc.first_line, yylloc.first_column, s);
+	fprintf(stderr, "%s:%d:%d: %s\n", input_filename, yylloc.first_line, yylloc.first_column, s);
 	exit(1);
 }
 

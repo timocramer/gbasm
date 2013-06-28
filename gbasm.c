@@ -12,20 +12,22 @@
 
 char *gbasm_filename;
 
+char *input_filename;
+
 char *src;
 BUFFER *binary;
 
 #define BUFSIZE 2048
-static char* read_file(const char *input_filename) {
+static char* read_file(const char *filename) {
 	FILE *f;
 	char tmp[BUFSIZE];
 	size_t n;
 	BUFFER *b = buffer_new();
 	char *r;
 	
-	f = fopen(input_filename, "r");
+	f = fopen(filename, "r");
 	if(f == NULL) {
-		fprintf(stderr, "%s: '%s' cannot be opened\n", gbasm_filename, input_filename);
+		fprintf(stderr, "%s: '%s' cannot be opened\n", gbasm_filename, filename);
 		return NULL;
 	}
 	
@@ -35,7 +37,7 @@ static char* read_file(const char *input_filename) {
 	} while(n == BUFSIZE);
 	
 	if(ferror(f)) {
-		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbasm_filename, input_filename);
+		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbasm_filename, filename);
 		return NULL;
 	}
 	fclose(f);
@@ -175,7 +177,9 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 	
-	src = read_file(argv[optind]);
+	input_filename = argv[optind];
+	
+	src = read_file(input_filename);
 	if(src == NULL)
 		return 1;
 	srcbase = src;
