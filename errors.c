@@ -16,3 +16,8 @@ void gbasm_error(const char *message) {
 void gbasm_warning(const char *message) {
 	fprintf(stderr, "%s: warning: %s\n", gbasm_filename, message);
 }
+
+void location_error(int line, int column, char *message) {
+	fprintf(stderr, "%s:%d:%d: error: %s\n", input_filename, line, column, message);
+	exit(1);
+}
