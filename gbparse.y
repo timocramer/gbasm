@@ -172,6 +172,7 @@ static void cb_function(unsigned char, unsigned char);
 static void cb_int_function(unsigned char, unsigned int, unsigned char);
 %}
 
+%error-verbose
 %initial-action {
 	tmpbuf = buffer_new();
 }
