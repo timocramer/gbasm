@@ -635,10 +635,8 @@ static void ld_simple(unsigned char dest, unsigned char source) {
 	printf("ld %s, %s\n", SREG(dest), SREG(source));
 #endif
 	
-	if(source == 6 && dest == 6) {
+	if(source == 6 && dest == 6)
 		yyerror("ld [hl], [hl] is not possible!");
-		exit(1);
-	}
 	
 	unsigned char opcode;
 	opcode = 0x40;
