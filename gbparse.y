@@ -1,8 +1,6 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <ctype.h>
 #include <string.h>
 #include <stdint.h>
 
@@ -212,7 +210,7 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 %left '*' '/' '%'
 %left UNARY
 
-%% /* Grammar rules and actions follow. */
+%%
 
 commands:
 /* empty */
