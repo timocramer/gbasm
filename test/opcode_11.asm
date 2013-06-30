@@ -1,0 +1,1 @@
+LD DE, 0xffff

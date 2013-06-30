@@ -1,0 +1,1 @@
+LD HL, 0xffff

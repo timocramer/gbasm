@@ -1,0 +1,1 @@
+JP NZ, 0xffff

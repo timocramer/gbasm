@@ -1,0 +1,1 @@
+ADC A, 0xff

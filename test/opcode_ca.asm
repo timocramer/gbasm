@@ -1,0 +1,1 @@
+JP Z, 0xffff

@@ -1,0 +1,1 @@
+CALL Z, 0xffff

@@ -1,0 +1,1 @@
+CALL NZ, 0xffff
