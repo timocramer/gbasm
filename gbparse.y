@@ -438,7 +438,7 @@ NUM { $$ = $1; }
 | IDENT {
 		unsigned int *p = load_int($1);
 		if(p == NULL)
-			yyerror("unknown variable");
+			location_error(@1.first_line, @1.first_column, "unknown identifier '%s'\n", $1);
 		free($1);
 		$$ = *p;
 	}
