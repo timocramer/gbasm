@@ -26,20 +26,16 @@ static char* read_file(const char *filename) {
 	char *r;
 	
 	f = fopen(filename, "r");
-	if(f == NULL) {
-		fprintf(stderr, "%s: '%s' cannot be opened\n", gbasm_filename, filename);
-		return NULL;
-	}
+	if(f == NULL)
+		gbasm_error("'%s' cannot be opened", filename);
 	
 	do {
 		n = fread(tmp, 1, BUFSIZE, f);
 		buffer_add_mem(b, tmp, n);
 	} while(n == BUFSIZE);
 	
-	if(ferror(f)) {
-		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbasm_filename, filename);
-		return NULL;
-	}
+	if(ferror(f))
+		gbasm_error("'%s' was not read successfully", filename);
 	fclose(f);
 	
 	buffer_add_char(b, 0);
@@ -127,7 +123,7 @@ static void write_binary_to_file(const char *out_filename) {
 	
 	written = fwrite(binary->data, 1, binary->size, f);
 	if(written != binary->size)
-		gbasm_error("binary was not written successfully");
+		gbasm_error("'%s' was not written successfully");
 	
 	fclose(f);
 }
@@ -180,8 +176,6 @@ int main(int argc, char **argv) {
 	input_filename = argv[optind];
 	
 	src = read_file(input_filename);
-	if(src == NULL)
-		return 1;
 	srcbase = src;
 	
 	variables_init();

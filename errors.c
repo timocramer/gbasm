@@ -17,6 +17,7 @@ void gbasm_error(const char *message, ...) {
 	va_start(args, message);
 	vfprintf(stderr, message, args);
 	va_end(args);
+	fputc('\n', stderr);
 	
 	exit(1);
 }
@@ -28,6 +29,7 @@ void gbasm_warning(const char *message, ...) {
 	va_start(args, message);
 	vfprintf(stderr, message, args);
 	va_end(args);
+	fputc('\n', stderr);
 }
 
 void location_error(YYLTYPE loc, char *message, ...) {
@@ -37,6 +39,7 @@ void location_error(YYLTYPE loc, char *message, ...) {
 	va_start(args, message);
 	vfprintf(stderr, message, args);
 	va_end(args);
+	fputc('\n', stderr);
 	
 	exit(1);
 }
@@ -48,4 +51,5 @@ void location_warning(YYLTYPE loc, char *message, ...) {
 	va_start(args, message);
 	vfprintf(stderr, message, args);
 	va_end(args);
+	fputc('\n', stderr);
 }
