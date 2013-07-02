@@ -18,12 +18,14 @@ static char* concat_strings(char *, char *);
 extern BUFFER *binary;
 static BUFFER *tmpbuf;
 
+/* here location_warning relies on yylloc fitting to t. this has to change */
 #define DEFINE_GET_UINT(bit) \
 static uint##bit##_t get_uint##bit(unsigned int t) {\
 	const uint##bit##_t i = t;\
 	const int##bit##_t j = t;\
 	if(i != t && j != (signed int)t)\
-		printf("integer is bigger than " #bit " bit and will be truncated\n");\
+		location_warning(yylloc.first_line, yylloc.first_column,\
+		"integer is bigger than " #bit " bit and will be truncated\n");\
 	return i;\
 }
 
@@ -224,11 +226,9 @@ IDENT ':' {
 	#ifdef DEBUG
 		printf("%s:\n", $1);
 	#endif
-		if(store_int($1, binary->write_pos)) {
-			fprintf(stderr, "%d:%d: multiple definition of label '%s'\n",
-					@1.first_line, @1.first_column, $1);
-			exit(1);
-		}
+		if(store_int($1, binary->write_pos))
+			location_error(@1.first_line, @1.first_column,
+					"multiple definition of label '%s'\n", $1);
 		free($1);
 	}
 /* constant definition */
@@ -236,11 +236,9 @@ IDENT ':' {
 	#ifdef DEBUG
 		printf("#define %s %u\n", $3, $4);
 	#endif
-		if(store_int($3, $4)) {
-			fprintf(stderr, "%d:%d: multiple definition of constant '%s'\n",
-					@3.first_line, @3.first_column, $3);
-			exit(1);
-		}
+		if(store_int($3, $4))
+			location_error(@1.first_line, @1.first_column,
+					"multiple definition of constant '%s'\n", $3);
 		free($3);
 	}
 
@@ -354,11 +352,8 @@ IDENT ':' {
 | cb_without_int singlereg { cb_function($1, $2); }
 
 | cb_with_int numexp ',' singlereg {
-		if($2 >= 8) {
-			fprintf(stderr, "%d:%d: the bit index has to be between 0 and 7\n",
-				@2.first_line, @2.first_column);
-			exit(1);
-		}
+		if($2 >= 8)
+			location_error(@2.first_line, @2.first_column, "the bit index has to be between 0 and 7\n");
 		cb_int_function($1, $2, $4);
 	}
 ;
@@ -513,8 +508,8 @@ string { $$ = $1; }
 %%
 
 static void yyerror(char const *s) {
-	fprintf(stderr, "%s:%d:%d: %s\n", input_filename, yylloc.first_line, yylloc.first_column, s);
-	exit(1);
+	/* "%s\n" because the newline would otherwise be missing */
+	location_error(yylloc.first_line, yylloc.first_column, "%s\n", s);
 }
 
 
