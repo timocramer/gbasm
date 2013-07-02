@@ -194,6 +194,7 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 
 %type <string> string stringlist
 
+%token END 0 "end of file" /* this allows a nicer error message */
 %token DB DM DS DW SEEK INC DEC JR LDD LDI PUSH POP CALL JP RET LDHL RST LDH LD RLC RRC RL RR SLA SRA SWAP SRL BIT RES SET CCF CPL DAA DI EI HALT NOP RETI RLA RLCA RRA RRCA SCF STOP Z NZ NC A B C D E H L ADD ADC SUB SBC AND OR XOR CP BC DE HL AF SP DEFINE
 
 %left ','
