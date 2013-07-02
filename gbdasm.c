@@ -377,7 +377,7 @@ static void disassemble(const BUFFER *binary) {
 	}
 }
 
-#define BUFSIZE 512
+#define BUFSIZE 2048
 static BUFFER* read_file(const char *input_filename) {
 	FILE *f;
 	char tmp[BUFSIZE];
