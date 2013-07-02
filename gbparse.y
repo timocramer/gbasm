@@ -24,8 +24,7 @@ static uint##bit##_t get_uint##bit(unsigned int t) {\
 	const uint##bit##_t i = t;\
 	const int##bit##_t j = t;\
 	if(i != t && j != (signed int)t)\
-		location_warning(yylloc.first_line, yylloc.first_column,\
-		"integer is bigger than " #bit " bit and will be truncated\n");\
+		location_warning(yylloc, "integer is bigger than " #bit " bit and will be truncated\n");\
 	return i;\
 }
 
@@ -227,8 +226,7 @@ IDENT ':' {
 		printf("%s:\n", $1);
 	#endif
 		if(store_int($1, binary->write_pos))
-			location_error(@1.first_line, @1.first_column,
-					"multiple definition of label '%s'\n", $1);
+			location_error(@1, "multiple definition of label '%s'\n", $1);
 		free($1);
 	}
 /* constant definition */
@@ -237,8 +235,7 @@ IDENT ':' {
 		printf("#define %s %u\n", $3, $4);
 	#endif
 		if(store_int($3, $4))
-			location_error(@1.first_line, @1.first_column,
-					"multiple definition of constant '%s'\n", $3);
+			location_error(@1, "multiple definition of constant '%s'\n", $3);
 		free($3);
 	}
 
@@ -353,7 +350,7 @@ IDENT ':' {
 
 | cb_with_int numexp ',' singlereg {
 		if($2 >= 8)
-			location_error(@2.first_line, @2.first_column, "the bit index has to be between 0 and 7\n");
+			location_error(@2, "the bit index has to be between 0 and 7\n");
 		cb_int_function($1, $2, $4);
 	}
 ;
@@ -438,7 +435,7 @@ NUM { $$ = $1; }
 | IDENT {
 		unsigned int *p = load_int($1);
 		if(p == NULL)
-			location_error(@1.first_line, @1.first_column, "unknown identifier '%s'\n", $1);
+			location_error(@1, "unknown identifier '%s'\n", $1);
 		free($1);
 		$$ = *p;
 	}
@@ -509,7 +506,7 @@ string { $$ = $1; }
 
 static void yyerror(char const *s) {
 	/* "%s\n" because the newline would otherwise be missing */
-	location_error(yylloc.first_line, yylloc.first_column, "%s\n", s);
+	location_error(yylloc, "%s\n", s);
 }
 
 

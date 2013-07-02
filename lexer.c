@@ -95,7 +95,7 @@ static void scan_char(void) {
 	
 	if(*src == 0 || src[1] == 0) {
 		does_not_end:
-		location_error(yylloc.first_line, yylloc.first_column, "character constant does not end");
+		location_error(yylloc, "character constant does not end");
 		return;
 	}
 	
@@ -113,7 +113,7 @@ static void scan_char(void) {
 		new_char = *src;
 	else {
 		too_long:
-		location_error(yylloc.first_line, yylloc.first_column, "character constant is too long");
+		location_error(yylloc, "character constant is too long");
 		return;
 	}
 	
@@ -180,7 +180,7 @@ static int scan_string(void) {
 	while(*src != '"') {
 		if(*src == 0) {
 			string_does_not_end:
-			location_error(yylloc.first_line, yylloc.first_column, "String does not end");
+			location_error(yylloc, "String does not end");
 		}
 		
 		if(*src == '\\') {
