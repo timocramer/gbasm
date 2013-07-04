@@ -226,7 +226,7 @@ IDENT ':' {
 		printf("%s:\n", $1);
 	#endif
 		if(store_int($1, binary->write_pos))
-			location_error(@1, "multiple definition of label '%s'\n", $1);
+			location_error(@1, "multiple definition of label '%s'", $1);
 		free($1);
 	}
 /* constant definition */
@@ -235,7 +235,7 @@ IDENT ':' {
 		printf("#define %s %u\n", $3, $4);
 	#endif
 		if(store_int($3, $4))
-			location_error(@1, "multiple definition of constant '%s'\n", $3);
+			location_error(@1, "multiple definition of constant '%s'", $3);
 		free($3);
 	}
 
@@ -343,7 +343,7 @@ IDENT ':' {
 
 | cb_with_int numexp ',' singlereg {
 		if($2 >= 8)
-			location_error(@2, "the bit index has to be between 0 and 7\n");
+			location_error(@2, "the bit index has to be between 0 and 7");
 		cb_int_function($1, $2, $4);
 	}
 ;
@@ -428,7 +428,7 @@ NUM { $$ = $1; }
 | IDENT {
 		unsigned int *p = load_int($1);
 		if(p == NULL)
-			location_error(@1, "unknown identifier '%s'\n", $1);
+			location_error(@1, "unknown identifier '%s'", $1);
 		free($1);
 		$$ = *p;
 	}
