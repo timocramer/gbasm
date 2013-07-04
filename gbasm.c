@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "buffer.h"
 #include "gbparse.h"
@@ -17,31 +18,39 @@ char *input_filename;
 char *src;
 BUFFER *binary;
 
-#define BUFSIZE 2048
 static char* read_file(const char *filename) {
 	FILE *f;
-	char tmp[BUFSIZE];
-	size_t n;
-	BUFFER *b = buffer_new();
 	char *r;
+	long size;
 	
 	f = fopen(filename, "r");
 	if(f == NULL)
-		gbasm_error("'%s' cannot be opened", filename);
+		gbasm_error("'%s' cannot be opened: %s", filename, strerror(errno));
 	
-	do {
-		n = fread(tmp, 1, BUFSIZE, f);
-		buffer_add_mem(b, tmp, n);
-	} while(n == BUFSIZE);
+	if(fseek(f, 0, SEEK_END) != 0)
+		goto error;
 	
-	if(ferror(f))
-		gbasm_error("'%s' was not read successfully", filename);
+	size = ftell(f);
+	if(size == -1)
+		goto error;
+	
+	r = malloc(size + 1);
+	if(r == NULL)
+		no_memory();
+	
+	if((fseek(f, 0, SEEK_SET) != 0)
+	|| (fread(r, size, 1, f) < 1)
+	|| (ferror(f)))
+		goto error;
+	
 	fclose(f);
-	
-	buffer_add_char(b, 0);
-	r = b->data;
-	buffer_destroy_keep(b);
+	r[size] = 0;
 	return r;
+	
+	error:
+	fclose(f);
+	gbasm_error("'%s' was not read successfully: %s", filename, strerror(errno));
+	return NULL; /* so the compiler doesn't complain */
 }
 
 static char get_rom_size_code(size_t size) {
