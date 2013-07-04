@@ -133,7 +133,6 @@ DEFINE_GET_UINT(16)
 #define NO_FLAG 0
 
 static void ds(unsigned int, unsigned char);
-static void write_bytes(const char *, size_t);
 
 static void jp(int, unsigned char, uint16_t);
 static void jr(int, unsigned char, unsigned char);
@@ -240,18 +239,11 @@ IDENT ':' {
 		free($3);
 	}
 
-| DM stringlist {
-		write_bytes($2, strlen($2));
-		free($2);
-	}
-| DB uint8list {
-		write_bytes(tmpbuf->data, tmpbuf->size);
-		buffer_reset(tmpbuf);
-	}
-| DW uint16list {
-		write_bytes(tmpbuf->data, tmpbuf->size);
-		buffer_reset(tmpbuf);
-	}
+/* the following three rules write into the binary in the expression of the list */
+| DM stringlist
+| DB uint8list
+| DW uint16list
+
 | DS numexp { ds($2, 0); }
 | DS numexp ',' uint8 { ds($2, $4); }
 | SEEK numexp {
@@ -489,18 +481,18 @@ numexp is given when a string is expected.
 ;
 
 uint8list:
-uint8 { buffer_add_char(tmpbuf, $1); }
-| uint8list ',' uint8 { buffer_add_char(tmpbuf, $3); }
+uint8 { buffer_add_char(binary, $1); }
+| uint8list ',' uint8 { buffer_add_char(binary, $3); }
 ;
 
 uint16list:
-uint16 { buffer_add_u16l(tmpbuf, $1); }
-| uint16list ',' uint16 { buffer_add_u16l(tmpbuf, $3); }
+uint16 { buffer_add_u16l(binary, $1); }
+| uint16list ',' uint16 { buffer_add_u16l(binary, $3); }
 ;
 
 stringlist:
-string { $$ = $1; }
-| stringlist ',' string { $$ = concat_strings($1, $3); }
+string { buffer_add_str(binary, $1); free($1); }
+| stringlist ',' string { buffer_add_str(binary, $3); free($3); }
 ;
 
 %%
@@ -531,20 +523,6 @@ static void ds(unsigned int size, unsigned char value) {
 	memset(p, value, size);
 	buffer_add_mem(binary, p, size);
 }
-
-static void write_bytes(const char *mem, size_t length) {
-#ifdef DEBUG
-	size_t i;
-	
-	printf("db %u", mem[0]);
-	for(i = 1; i < length; ++i)
-		printf(", %u", mem[i]);
-	putchar('\n');
-	
-#endif
-	buffer_add_mem(binary, mem, length);
-}
-
 
 static void jp(int has_flag, unsigned char flag, uint16_t address) {
 	unsigned char mem[3];
