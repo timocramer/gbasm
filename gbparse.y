@@ -348,6 +348,21 @@ IDENT ':' {
 	}
 ;
 
+uint8list:
+uint8 { buffer_add_char(binary, $1); }
+| uint8list ',' uint8 { buffer_add_char(binary, $3); }
+;
+
+uint16list:
+uint16 { buffer_add_u16l(binary, $1); }
+| uint16list ',' uint16 { buffer_add_u16l(binary, $3); }
+;
+
+stringlist:
+string { buffer_add_str(binary, $1); free($1); }
+| stringlist ',' string { buffer_add_str(binary, $3); free($3); }
+;
+
 cb_without_int:
 RLC { $$ = 0; }
 | RRC { $$ = 1; }
@@ -478,21 +493,6 @@ numexp is given when a string is expected.
 | string '+' string { $$ = concat_strings($1, $3); }
 | numexp '?' string ':' string { $$ = $1 ? $3 : $5; }
 */
-;
-
-uint8list:
-uint8 { buffer_add_char(binary, $1); }
-| uint8list ',' uint8 { buffer_add_char(binary, $3); }
-;
-
-uint16list:
-uint16 { buffer_add_u16l(binary, $1); }
-| uint16list ',' uint16 { buffer_add_u16l(binary, $3); }
-;
-
-stringlist:
-string { buffer_add_str(binary, $1); free($1); }
-| stringlist ',' string { buffer_add_str(binary, $3); free($3); }
 ;
 
 %%
