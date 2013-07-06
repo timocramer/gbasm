@@ -40,7 +40,7 @@ static char* read_file(const char *filename) {
 	
 	if((fseek(f, 0, SEEK_SET) != 0)
 	|| (fread(r, size, 1, f) < 1)
-	|| (ferror(f)))
+	|| ferror(f))
 		goto error;
 	
 	fclose(f);
@@ -48,7 +48,6 @@ static char* read_file(const char *filename) {
 	return r;
 	
 	error:
-	fclose(f);
 	gbasm_error("'%s' was not read successfully: %s", filename, strerror(errno));
 	return NULL; /* so the compiler doesn't complain */
 }
