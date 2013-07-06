@@ -16,7 +16,6 @@ static void yyerror(char const *);
 static char* concat_strings(char *, char *);
 
 extern BUFFER *binary;
-static BUFFER *tmpbuf;
 
 /* here location_warning relies on yylloc fitting to t. this has to change */
 #define DEFINE_GET_UINT(bit) \
@@ -172,9 +171,6 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 %}
 
 %error-verbose
-%initial-action {
-	tmpbuf = buffer_new();
-}
 
 %union {
 	char *string;
@@ -183,9 +179,9 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 	unsigned char intern;
 }
 
-%token <integer> NUM
-%token <string> STR
-%token <identifier> IDENT
+%token <integer> INTEGER
+%token <string> STRING
+%token <identifier> IDENTIFIER
 
 %type <intern> pushpopdreg aluoperation aludreg aludreg_without_sp singlereg singlereg_without_a flag cb_with_int cb_without_int single_instruction bcde
 
@@ -221,7 +217,7 @@ commands:
 command:
 /** commands to the assembler */
 /* label definition */
-IDENT ':' {
+IDENTIFIER ':' {
 	#ifdef DEBUG
 		printf("%s:\n", $1);
 	#endif
@@ -230,7 +226,7 @@ IDENT ':' {
 		free($1);
 	}
 /* constant definition */
-| '#' DEFINE IDENT numexp {
+| '#' DEFINE IDENTIFIER numexp {
 	#ifdef DEBUG
 		printf("#define %s %u\n", $3, $4);
 	#endif
@@ -439,8 +435,8 @@ uint8: numexp { $$ = get_uint8($1); };
 uint16: numexp { $$ = get_uint16($1); };
 
 numexp:
-NUM { $$ = $1; }
-| IDENT {
+INTEGER { $$ = $1; }
+| IDENTIFIER {
 		unsigned int *p = load_int($1);
 		if(p == NULL)
 			location_error(@1, "unknown identifier '%s'", $1);
@@ -484,10 +480,10 @@ NUM { $$ = $1; }
 ;
 
 string:
-STR { $$ = $1; }
-| string STR { $$ = concat_strings($1, $2); }
+STRING { $$ = $1; }
+| string STRING { $$ = concat_strings($1, $2); }
 /*
-The following two rules work, but only when "string STR" is disabled.
+The following two rules work, but only when "string STRING" is disabled.
 Also error messages give false positions when they are enabled and a
 numexp is given when a string is expected.
 | string '+' string { $$ = concat_strings($1, $3); }

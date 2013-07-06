@@ -162,7 +162,7 @@ static int scan_int(void) {
 #ifdef DEBUG
 	printf("yylex returns %d\n", yylval.integer);
 #endif
-	return NUM;
+	return INTEGER;
 }
 
 static int scan_string(void) {
@@ -220,7 +220,7 @@ static int scan_string(void) {
 	
 	++yylloc.last_column;
 	++src; /* now src points to the char after the " */
-	return STR;
+	return STRING;
 }
 
 #define ENTRY(token) {.op = #token, .tok = token}
@@ -350,7 +350,7 @@ static int scan_identifier(void) {
 	printf("yylex returns identifier %s\n", yylval.identifier);
 #endif
 	
-	return IDENT;
+	return IDENTIFIER;
 }
 
 int yylex(void) {
