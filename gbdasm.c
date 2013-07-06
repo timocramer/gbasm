@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <errno.h>
 
-#include "buffer.h"
+#include "errors.h"
 
 char *gbasm_filename;
 char *input_filename;
@@ -330,12 +332,11 @@ static unsigned int byte_arguments(unsigned char opcode) {
 
 #define WIDTH 20
 
-static void disassemble(const BUFFER *binary) {
-	unsigned char *data = (unsigned char *) binary->data;
+static void disassemble(unsigned char *data, size_t size) {
 	size_t i = 0;
 	int j, written;
 	
-	while(i < binary->size) {
+	while(i < size) {
 		printf("%06zx: ", i);
 		
 		if(data[i] == 0xcb) {
@@ -351,7 +352,7 @@ static void disassemble(const BUFFER *binary) {
 			++i;
 			break;
 		case 1:
-			if(i + 1 >= binary->size) {
+			if(i + 1 >= size) {
 				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbasm_filename);
 				exit(1);
 			}
@@ -363,7 +364,7 @@ static void disassemble(const BUFFER *binary) {
 			i += 2;
 			break;
 		case 2:
-			if(i + 2 >= binary->size) {
+			if(i + 2 >= size) {
 				fprintf(stderr, "%s: The file seems to be incomplete!\n", gbasm_filename);
 				exit(1);
 			}
@@ -377,36 +378,45 @@ static void disassemble(const BUFFER *binary) {
 	}
 }
 
-#define BUFSIZE 2048
-static BUFFER* read_file(const char *input_filename) {
+static unsigned char* read_file(const char *filename, size_t *size) {
 	FILE *f;
-	char tmp[BUFSIZE];
-	size_t n;
-	BUFFER *b;
+	unsigned char *r;
+	long tmpsize;
 	
-	f = fopen(input_filename, "r");
-	if(f == NULL) {
-		fprintf(stderr, "%s: '%s' cannot be opened\n", gbasm_filename, input_filename);
-		return NULL;
-	}
+	f = fopen(filename, "r");
+	if(f == NULL)
+		gbasm_error("'%s' cannot be opened: %s", filename, strerror(errno));
 	
-	b = buffer_new();
+	if(fseek(f, 0, SEEK_END) != 0)
+		goto error;
 	
-	do {
-		n = fread(tmp, 1, BUFSIZE, f);
-		buffer_add_mem(b, tmp, n);
-	} while(n == BUFSIZE);
+	tmpsize = ftell(f);
+	if(tmpsize == -1)
+		goto error;
+	*size = (size_t) tmpsize;
 	
-	if(ferror(f)) {
-		fprintf(stderr, "%s: an error occured reading '%s'!\n", gbasm_filename, input_filename);
-		return NULL;
-	}
+	r = malloc(*size + 1);
+	if(r == NULL)
+		no_memory();
 	
-	return b;
+	if((fseek(f, 0, SEEK_SET) != 0)
+	|| (fread(r, *size, 1, f) < 1)
+	|| (ferror(f)))
+		goto error;
+	
+	fclose(f);
+	r[*size] = 0;
+	return r;
+	
+	error:
+	fclose(f);
+	gbasm_error("'%s' was not read successfully: %s", filename, strerror(errno));
+	return NULL; /* so the compiler doesn't complain */
 }
 
 int main(int argc, char **argv) {
-	BUFFER *binary;
+	unsigned char *data;
+	size_t size;
 	
 	gbasm_filename = argv[0];
 	
@@ -416,12 +426,12 @@ int main(int argc, char **argv) {
 	}
 	
 	input_filename = argv[1];
-	binary = read_file(input_filename);
-	if(binary == NULL)
+	data = read_file(input_filename, &size);
+	if(data == NULL)
 		return 1;
 	
-	disassemble(binary);
-	buffer_destroy(binary);
+	disassemble(data, size);
+	free(data);
 	
 	return 0;
 }

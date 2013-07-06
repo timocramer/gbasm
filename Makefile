@@ -12,7 +12,7 @@ all: gbasm gbdasm
 gbasm: gbasm.o gbparse.o buffer.o lexer.o variables.o errors.o
 	$(CC) -o $@ $^
 
-gbdasm: gbdasm.o buffer.o errors.o
+gbdasm: gbdasm.o errors.o
 	$(CC) -o $@ $^
 
 %.o: %.c $(HEADERS)
