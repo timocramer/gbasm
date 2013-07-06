@@ -500,12 +500,13 @@ static void yyerror(char const *s) {
 
 
 static char* concat_strings(char *a, char *b) {
-	char *t = realloc(a, strlen(a) + strlen(b) + 1);
+	size_t a_len = strlen(a);
+	char *t = realloc(a, a_len + strlen(b) + 1);
 	
 	if(t == NULL)
 		no_memory();
 	
-	strcat(t, b);
+	strcpy(t + a_len, b);
 	free(b);
 	return t;
 }
