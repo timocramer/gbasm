@@ -7,7 +7,7 @@ TESTFILES=$(ASMFILES:%.asm=%.gb)
 test: $(TESTFILES)
 	./runtests.sh
 
-%.gb: %.asm %.expect
+%.gb: %.asm %.expect $(GBASM)
 	$(GBASM) -o $@ -m $<
 
 clean:
