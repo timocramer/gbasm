@@ -185,7 +185,7 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 
 %type <intern> pushpopdreg aluoperation aludreg aludreg_without_sp singlereg singlereg_without_a flag cb_with_int cb_without_int single_instruction bcde
 
-%type <integer> numexp uint16list uint16 uint8 uint8list
+%type <integer> numexp uint16list uint16 uint8 uint8list immediate
 
 %type <string> string stringlist
 
@@ -221,7 +221,7 @@ IDENTIFIER ':' {
 	#ifdef DEBUG
 		printf("%s:\n", $1);
 	#endif
-		if(store_int($1, binary->write_pos))
+		if(pass == 1 && store_int($1, binary->write_pos))
 			location_error(@1, "multiple definition of label '%s'", $1);
 		free($1);
 	}
@@ -230,7 +230,7 @@ IDENTIFIER ':' {
 	#ifdef DEBUG
 		printf("#define %s %u\n", $3, $4);
 	#endif
-		if(store_int($3, $4))
+		if(pass == 1 && store_int($3, $4))
 			location_error(@1, "multiple definition of constant '%s'", $3);
 		free($3);
 	}
@@ -240,8 +240,8 @@ IDENTIFIER ':' {
 | DB uint8list
 | DW uint16list
 
-| DS numexp { ds($2, 0); }
-| DS numexp ',' uint8 { ds($2, $4); }
+| DS immediate { ds($2, 0); }
+| DS immediate ',' uint8 { ds($2, $4); }
 | SEEK numexp {
 	#ifdef DEBUG
 		printf("seek %d\n", $2);
@@ -434,14 +434,21 @@ NZ { $$ = 0; }
 uint8: numexp { $$ = get_uint8($1); };
 uint16: numexp { $$ = get_uint16($1); };
 
+/* numexp is an integer where the definition with an identifier can be after it's use */
 numexp:
 INTEGER { $$ = $1; }
 | IDENTIFIER {
 		unsigned int *p = load_int($1);
-		if(p == NULL)
-			location_error(@1, "unknown identifier '%s'", $1);
+		
+		if(p == NULL) {
+			if(pass == 1)
+				$$ = 0;
+			else
+				location_error(@1, "unknown identifier '%s'", $1);
+		}
+		else
+			$$ = *p;
 		free($1);
-		$$ = *p;
 	}
 
 | '-' numexp %prec UNARY { $$ = -$2; } /* unary minus */
@@ -477,6 +484,52 @@ INTEGER { $$ = $1; }
 | numexp '?' numexp ':' numexp { $$ = $1 ? $3 : $5; }
 
 | '(' numexp ')' { $$ = $2; }
+;
+
+/* immediate is an integer where the definition with an identifier must be before it's use */
+immediate:
+INTEGER { $$ = $1; }
+| IDENTIFIER {
+		unsigned int *p = load_int($1);
+		if(p == NULL)
+			location_error(@1, "unknown identifier '%s'", $1);
+		free($1);
+		$$ = *p;
+	}
+
+| '-' immediate %prec UNARY { $$ = -$2; } /* unary minus */
+| '+' immediate %prec UNARY { $$ = +$2; } /* unary plus */
+| '!' immediate %prec UNARY { $$ = !$2; } /* logical negation */
+| '~' immediate %prec UNARY { $$ = ~$2; } /* bitwise negation */
+
+| immediate '+' immediate { $$ = $1 + $3; }
+| immediate '-' immediate { $$ = $1 - $3; }
+
+| immediate '*' immediate { $$ = $1 * $3; }
+| immediate '/' immediate { $$ = $1 / $3; }
+| immediate '%' immediate { $$ = $1 % $3; }
+
+| immediate LSHIFT immediate { $$ = $1 << $3; }
+| immediate RSHIFT immediate { $$ = $1 >> $3; }
+
+| immediate '<' immediate { $$ = $1 < $3; }
+| immediate LE immediate  { $$ = $1 <= $3; }
+| immediate '>' immediate { $$ = $1 > $3; }
+| immediate GE immediate  { $$ = $1 >= $3; }
+
+| immediate EQ immediate  { $$ = $1 == $3; }
+| immediate NEQ immediate { $$ = $1 != $3; }
+
+| immediate '&' immediate { $$ = $1 & $3; }
+| immediate '|' immediate { $$ = $1 | $3; }
+| immediate '^' immediate { $$ = $1 ^ $3; }
+
+| immediate LOGAND immediate { $$ = $1 && $3; }
+| immediate LOGOR immediate  { $$ = $1 || $3; }
+
+| immediate '?' immediate ':' immediate { $$ = $1 ? $3 : $5; }
+
+| '(' immediate ')' { $$ = $2; }
 ;
 
 string:

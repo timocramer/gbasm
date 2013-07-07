@@ -16,6 +16,7 @@ char *gbasm_filename;
 char *input_filename;
 
 char *src;
+int pass;
 BUFFER *binary;
 
 static char* read_file(const char *filename) {
@@ -189,6 +190,15 @@ int main(int argc, char **argv) {
 	variables_init();
 	binary = buffer_new();
 	
+	pass = 1;
+	yyparse();
+	src = srcbase;
+	yylloc.first_column = 0;
+	yylloc.last_column = 0;
+	yylloc.first_line = 0;
+	yylloc.last_line = 0;
+	binary->write_pos = 0;
+	pass = 2;
 	yyparse();
 	
 	if(automatic_metadata)

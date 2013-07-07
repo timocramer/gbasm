@@ -9,6 +9,7 @@ extern char *input_filename;
 
 /* src is the pointer in the sourcefile, used by yylex */
 extern char *src;
+extern int pass;
 
 extern BUFFER *binary;
 
