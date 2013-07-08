@@ -119,7 +119,7 @@ DEFINE_GET_UINT(16)
 #ifdef DEBUG
 #define debug_puts(s) puts(s)
 #else
-#define debug_puts(s) (void) s
+#define debug_puts(s) (void)0
 #endif
 
 #define INCREMENT 0
