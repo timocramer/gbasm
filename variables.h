@@ -8,6 +8,7 @@ void variables_destroy(void);
 
 unsigned int* load_int(const char *);
 
+int store_label(const char *, unsigned int);
 int store_int(const char *, unsigned int);
 
 #ifdef DEBUG

@@ -221,7 +221,7 @@ IDENTIFIER ':' {
 	#ifdef DEBUG
 		printf("%s:\n", $1);
 	#endif
-		if(pass == 1 && store_int($1, binary->write_pos))
+		if(pass == 1 && store_label($1, binary->write_pos))
 			location_error(@1, "multiple definition of label '%s'", $1);
 		free($1);
 	}

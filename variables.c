@@ -56,6 +56,19 @@ unsigned int* load_int(const char *name) {
 	return NULL;
 }
 
+int store_label(const char *name, unsigned int address) {
+	unsigned int real_address;
+	
+	/* because of bank switching we have to calculate the real address when
+	it's loaded. Otherwise we could jump into wrong memory areas */
+	if(address < 0x4000)
+		real_address = address;
+	else
+		real_address = (address % 0x4000) + 0x4000;
+	
+	return store_int(name, real_address);
+}
+
 int store_int(const char *name, unsigned int value) {
 	size_t i;
 	char *newname;
