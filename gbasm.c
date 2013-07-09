@@ -190,13 +190,16 @@ int main(int argc, char **argv) {
 	variables_init();
 	binary = buffer_new();
 	
+	/* make pass 1 */
 	pass = 1;
 	yyparse();
+	
+	/* reset everything and make pass 2 */
 	src = srcbase;
-	yylloc.first_column = 0;
-	yylloc.last_column = 0;
-	yylloc.first_line = 0;
-	yylloc.last_line = 0;
+	yylloc.first_column = 1;
+	yylloc.last_column = 1;
+	yylloc.first_line = 1;
+	yylloc.last_line = 1;
 	binary->write_pos = 0;
 	pass = 2;
 	yyparse();
