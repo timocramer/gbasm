@@ -25,4 +25,5 @@ clean:
 	$(RM) *.o gbparse.c gbparse.h gbasm gbdasm
 
 install:
-	install -s gbasm gbdasm $(BINDIR)
+	install -Ds gbasm $(BINDIR)
+	install -Ds gbdasm $(BINDIR)
