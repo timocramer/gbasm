@@ -6,6 +6,9 @@ I liked the GameBoy and always wanted to make a game for it, but it was also an
 interesting idea to write the assembler itself. This is the second try (all I
 wanted was beginning with Bison) and it finally works!
 
+If you want to install it under Arch Linux, you only need the PKGBUILD, which
+loads the code then.
+
 Thanks to
 - GoldenCrystal (http://goldencrystal.free.fr/GBZ80Opcodes.pdf)
 - Pan of Anthrox, GABY, Marat Fayzullin, Pascal Felber, Paul Robson, Martin
