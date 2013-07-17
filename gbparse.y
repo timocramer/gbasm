@@ -17,13 +17,12 @@ static char* concat_strings(char *, char *);
 
 extern BUFFER *binary;
 
-/* here location_warning relies on yylloc fitting to t. this has to change */
 #define DEFINE_GET_UINT(bit) \
 static uint##bit##_t get_uint##bit(unsigned int t) {\
 	const uint##bit##_t i = t;\
 	const int##bit##_t j = t;\
-	if(i != t && j != (signed int)t)\
-		location_warning(yylloc, "integer is bigger than " #bit " bit and will be truncated\n");\
+	if(pass == 2 && i != t && j != (signed int)t)\
+		location_warning(yylloc, "integer is bigger than " #bit " bit and will be truncated");\
 	return i;\
 }
 
