@@ -34,7 +34,7 @@ static int scan_operator(void) {
 	
 	for(i = 0; i < sizeof(operators) / sizeof(operators[0]); ++i) {
 		len = strlen(operators[i].op);
-		if(strncasecmp(src, operators[i].op, len) == 0) {
+		if(strncmp(src, operators[i].op, len) == 0) {
 			src += len;
 			yylloc.last_column += len;
 #ifdef DEBUG
