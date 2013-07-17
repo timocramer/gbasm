@@ -302,7 +302,7 @@ static const struct element tokentable[] = {
 
 #define IDENTIFIER_CHAR(x) (isalnum(x) || (x) == '_')
 
-static int find_special_token() {
+static int scan_special_identifier() {
 	size_t i;
 	size_t len;
 	
@@ -405,7 +405,7 @@ int yylex(void) {
 	if(status != 0)
 		return status;
 	
-	status = find_special_token();
+	status = scan_special_identifier();
 	if(status != 0)
 		return status;
 	
