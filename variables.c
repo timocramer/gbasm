@@ -36,7 +36,6 @@ void variables_init(void) {
 	/* allocate the initial chunk */
 	vars_size = 0;
 	vars_alloc = 0;
-	resize_if_necessary();
 }
 
 void variables_destroy(void) {
