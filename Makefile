@@ -1,6 +1,6 @@
 CFLAGS=-Wall -Wextra -O2 -pipe
 
-HEADERS=gbasm.h gbparse.h buffer.h variables.h errors.h
+HEADERS=gbparse.h gbasm.h buffer.h variables.h errors.h
 
 PREFIX=/usr/local
 BINDIR=$(PREFIX)/bin
@@ -9,7 +9,7 @@ BINDIR=$(PREFIX)/bin
 
 all: gbasm gbdasm
 
-gbasm: gbasm.o gbparse.o buffer.o lexer.o variables.o errors.o
+gbasm: gbparse.o gbasm.o buffer.o lexer.o variables.o errors.o
 	$(CC) -o $@ $^
 
 gbdasm: gbdasm.o errors.o
@@ -18,8 +18,8 @@ gbdasm: gbdasm.o errors.o
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-gbparse.c gbparse.h: gbparse.y
-	bison -Wall -o gbparse.c -d $^
+%.h %.c: %.y
+	bison -Wall -o $*.c --defines=$*.h $^
 
 clean:
 	$(RM) *.o gbparse.c gbparse.h gbasm gbdasm
