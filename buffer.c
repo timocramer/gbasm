@@ -95,9 +95,3 @@ void buffer_destroy(BUFFER *b) {
 void buffer_destroy_keep(BUFFER *b) {
 	free(b);
 }
-
-void buffer_reset(BUFFER *b) {
-	memset(b->data, 0, b->alloc_size);
-	b->size = 0;
-	b->write_pos = 0;
-}

@@ -22,6 +22,4 @@ void buffer_add_u16l(BUFFER *, uint16_t);
 void buffer_destroy(BUFFER *);
 void buffer_destroy_keep(BUFFER *);
 
-void buffer_reset(BUFFER *);
-
 #endif
