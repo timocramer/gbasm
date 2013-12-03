@@ -55,9 +55,6 @@ static unsigned int chr2dec(unsigned char x) {
 	return 0xff;
 }
 
-/* scans an unsigned int, adds it to the token_list and returns the pointer
-where it finished reading */
-/* should we check for 2 <= base <= 36 ? */
 static void scan_uint(unsigned int base) {
 	unsigned int i = 0;
 	unsigned char c;
