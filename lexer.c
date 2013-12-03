@@ -93,7 +93,7 @@ static char slash_char(const char c) {
 static void scan_char(void) {
 	char new_char;
 	
-	if(*src == 0 || src[1] == 0) {
+	if(*src == 0 || *(src + 1) == 0) {
 		does_not_end:
 		location_error(yylloc, "character constant does not end");
 		return;
@@ -102,14 +102,14 @@ static void scan_char(void) {
 	if(*src == '\\') {
 		++src;
 		++yylloc.last_column;
-		if(src[1] == 0)
+		if(*(src + 1) == 0)
 			goto does_not_end;
-		if(src[1] != '\'')
+		if(*(src + 1) != '\'')
 			goto too_long;
 		
 		new_char = slash_char(*src);
 	}
-	else if(src[1] == '\'')
+	else if(*(src + 1) == '\'')
 		new_char = *src;
 	else {
 		too_long:
