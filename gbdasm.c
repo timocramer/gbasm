@@ -378,10 +378,10 @@ static void disassemble(unsigned char *data, size_t size) {
 	}
 }
 
-static unsigned char* read_file(const char *filename, size_t *size) {
+static void read_file(const char *filename, size_t *size, unsigned char **data) {
 	FILE *f;
-	unsigned char *r;
 	long tmpsize;
+	unsigned char *tmpdata;
 	
 	f = fopen(filename, "r");
 	if(f == NULL)
@@ -393,25 +393,25 @@ static unsigned char* read_file(const char *filename, size_t *size) {
 	tmpsize = ftell(f);
 	if(tmpsize == -1)
 		goto error;
-	*size = (size_t) tmpsize;
 	
-	r = malloc(*size + 1);
-	if(r == NULL)
+	tmpdata = malloc(tmpsize);
+	if(tmpdata == NULL)
 		no_memory();
 	
 	if((fseek(f, 0, SEEK_SET) != 0)
-	|| (fread(r, *size, 1, f) < 1)
+	|| (fread(tmpdata, tmpsize, 1, f) < 1)
 	|| (ferror(f)))
 		goto error;
 	
 	fclose(f);
-	r[*size] = 0;
-	return r;
+	
+	*size = (size_t) tmpsize;
+	*data = tmpdata;
+	return;
 	
 	error:
 	fclose(f);
 	gbasm_error("'%s' was not read successfully: %s", filename, strerror(errno));
-	return NULL; /* so the compiler doesn't complain */
 }
 
 int main(int argc, char **argv) {
@@ -426,9 +426,7 @@ int main(int argc, char **argv) {
 	}
 	
 	input_filename = argv[1];
-	data = read_file(input_filename, &size);
-	if(data == NULL)
-		return 1;
+	read_file(input_filename, &size, &data);
 	
 	disassemble(data, size);
 	free(data);
