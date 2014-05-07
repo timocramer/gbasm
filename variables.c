@@ -38,6 +38,11 @@ void variables_destroy(void) {
 	for(i = 0; i < vars_size; ++i)
 		free(vars[i].name);
 	free(vars);
+	
+	/* set global variables to an empty state */
+	vars = NULL;
+	vars_alloc = 0;
+	vars_size = 0;
 }
 
 unsigned int* load_int(const char *name) {
