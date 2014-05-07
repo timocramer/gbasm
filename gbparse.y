@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <alloca.h>
 
 #include "buffer.h"
 #include "variables.h"

@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Wextra -O2 -pipe
+CFLAGS=-Wall -Wextra -O2 -pipe -std=c11 -D_POSIX_C_SOURCE=200809L
 
 HEADERS=gbparse.h gbasm.h buffer.h variables.h errors.h
 
