@@ -5,7 +5,7 @@ HEADERS=gbparse.h gbasm.h buffer.h variables.h errors.h
 PREFIX=/usr/local
 BINDIR=$(PREFIX)/bin
 
-.PHONY: all clean install
+.PHONY: all clean install test
 
 all: gbasm gbdasm
 
@@ -23,6 +23,10 @@ gbdasm: gbdasm.o errors.o
 
 clean:
 	$(RM) *.o gbparse.c gbparse.h gbasm gbdasm
+	@$(MAKE) -C test clean
+
+test: gbasm
+	@$(MAKE) -C test test
 
 install:
 	install -Ds gbasm $(BINDIR)
