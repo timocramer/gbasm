@@ -299,11 +299,11 @@ static const struct element tokentable[] = {
 
 #define IDENTIFIER_CHAR(x) (isalnum(x) || (x) == '_')
 
-static int scan_special_identifier() {
+static int scan_special_identifier(void) {
 	size_t i;
 	size_t len;
 	
-	/* one little check before we go into the for loop */
+	/* when there is no identifier, we don't need to go through this whole table */
 	if(!IDENTIFIER_CHAR(*src))
 		return 0;
 	
