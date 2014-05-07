@@ -187,7 +187,6 @@ int main(int argc, char **argv) {
 	src = read_file(input_filename);
 	srcbase = src;
 	
-	variables_init();
 	binary = buffer_new();
 	
 	/* make pass 1 */

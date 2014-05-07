@@ -16,9 +16,9 @@ struct variable {
 
 #define ALLOC_CHUNK 64
 
-static struct variable *vars;
-static size_t vars_alloc;
-static size_t vars_size;
+static struct variable *vars = NULL;
+static size_t vars_alloc = 0;
+static size_t vars_size = 0;
 
 static void resize_if_necessary(void) {
 	struct variable *temp;
@@ -30,12 +30,6 @@ static void resize_if_necessary(void) {
 			no_memory();
 		vars = temp;
 	}
-}
-
-void variables_init(void) {
-	/* allocate the initial chunk */
-	vars_size = 0;
-	vars_alloc = 0;
 }
 
 void variables_destroy(void) {
