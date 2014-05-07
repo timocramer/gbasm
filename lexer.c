@@ -365,17 +365,10 @@ int yylex(void) {
 		yylloc.last_column);
 #endif
 	
-	/* Skip white space. */
 	skip_white_space:
 	while(*src == ' ' || *src == '\t') {
 		++yylloc.last_column;
 		++src;
-	}
-	if(*src == '\n') {
-		++yylloc.last_line;
-		yylloc.last_column = 1;
-		++src;
-		goto skip_white_space;
 	}
 	
 	/* skip comments */
@@ -384,6 +377,14 @@ int yylex(void) {
 			++yylloc.last_column;
 			++src;
 		}
+	}
+	
+	/* when a newline appears, update yylloc accordingly and start to skip
+	whitespace again */
+	if(*src == '\n') {
+		++yylloc.last_line;
+		yylloc.last_column = 1;
+		++src;
 		goto skip_white_space;
 	}
 	
