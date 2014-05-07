@@ -10,12 +10,10 @@
 #include "gbasm.h"
 #include "gbparse.h"
 
-extern int yylex(void);
+extern int yylex(void); /* defined in lexer.c */
 static void yyerror(char const *);
 
 static char* concat_strings(char *, char *);
-
-extern BUFFER *binary;
 
 #define DEFINE_GET_UINT(bit) \
 static uint##bit##_t get_uint##bit(unsigned int t) {\
