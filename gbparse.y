@@ -545,8 +545,7 @@ numexp is given when a string is expected.
 %%
 
 static void yyerror(char const *s) {
-	/* "%s\n" because the newline would otherwise be missing */
-	location_error(yylloc, "%s\n", s);
+	location_error(yylloc, "%s", s);
 }
 
 
