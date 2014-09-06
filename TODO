@@ -1,4 +1,2 @@
-- calling labels before definition
-- bank switching & address calculation
 - include command
 - maybe small optimizations (like using JR instead of JP when it's in range)
