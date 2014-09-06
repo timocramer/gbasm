@@ -105,13 +105,15 @@ static void write_metadata(const char *game_name) {
 		0xC0,0x1A // Checksum (GameBoy ignores this value.)
 	};
 	
-	strncpy(m + GAME_NAME_OFFSET, game_name, GAME_NAME_MAX_LENGTH);
+	// set game name
 	if(strlen(game_name) > GAME_NAME_MAX_LENGTH)
 		gbasm_warning("Game name is too long and will be truncated");
+	strncpy(m + GAME_NAME_OFFSET, game_name, GAME_NAME_MAX_LENGTH);
 	
+	// set size code
 	m[0x48] = get_rom_size_code(binary->size);
 	
-	/* don't ask. the GameBoy demands it */
+	// set complement information
 	complement = 25;
 	for(i = 0x34; i < 0x4d; ++i)
 		complement += m[i];
