@@ -1,6 +1,7 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "gbparse.h"
 #include "buffer.h"
@@ -46,22 +47,22 @@ static int scan_operator(void) {
 	return 0;
 }
 
-static unsigned int chr2dec(unsigned char x) {
+static unsigned int chr2int(unsigned char x) {
 	if(x >= '0' && x <= '9')
 		return x - '0';
-	x &= ~0x20;
+	x &= ~0x20; // make lowercase letters uppercase
 	if(x >= 'A' && x <= 'Z')
 		return x - 'A' + 10;
-	return 0xff;
+	return UINT_MAX;
 }
 
 static void scan_uint(unsigned int base) {
 	unsigned int i = 0;
-	unsigned char c;
+	unsigned int c;
 	
 	while(1) {
-		c = chr2dec(*src);
-		if(c >= base) /* this also includes the 0xff case */
+		c = chr2int(*src);
+		if(c >= base) /* this also includes the UINT_MAX case */
 			break;
 		i *= base;
 		i += c;
