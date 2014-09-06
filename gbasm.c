@@ -132,7 +132,7 @@ static void write_binary_to_file(const char *out_filename) {
 	
 	written = fwrite(binary->data, 1, binary->size, f);
 	if(written != binary->size)
-		gbasm_error("'%s' was not written successfully");
+		gbasm_error("'%s' was not written successfully", out_filename);
 	
 	fclose(f);
 }
