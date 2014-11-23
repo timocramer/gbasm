@@ -4,6 +4,8 @@ ASMFILES=$(wildcard *.asm)
 EXPECTFILES=$(ASMFILES:%.asm=%.expect)
 TESTFILES=$(ASMFILES:%.asm=%.gb)
 
+.PHONY: test clean
+
 test: $(TESTFILES)
 	./runtests.sh
 
