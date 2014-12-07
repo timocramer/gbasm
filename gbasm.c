@@ -50,7 +50,6 @@ static char* read_file(const char *filename) {
 	
 	error:
 	gbasm_error("'%s' was not read successfully: %s", filename, strerror(errno));
-	return NULL; /* so the compiler doesn't complain */
 }
 
 static char get_rom_size_code(size_t size) {
@@ -130,13 +129,17 @@ static void write_binary_to_file(const char *out_filename) {
 	
 	f = fopen(out_filename, "w");
 	if(f == NULL)
-		return;
+		goto error;
 	
 	written = fwrite(binary.data, 1, binary.size, f);
 	if(written != binary.size)
-		gbasm_error("'%s' was not written successfully", out_filename);
+		goto error;
 	
 	fclose(f);
+	return;
+	
+	error:
+	gbasm_error("'%s' was not written successfully: %s", out_filename, strerror(errno));
 }
 
 
