@@ -4,22 +4,22 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef struct {
+struct buffer {
 	char *data;
 	size_t size;
 	size_t alloc_size;
 	size_t write_pos;
-} BUFFER;
+};
 
-BUFFER* buffer_new(void);
+struct buffer* buffer_new(void);
 
-void buffer_add_char(BUFFER *, char);
-void buffer_add_str(BUFFER *, const char *);
-void buffer_add_mem(BUFFER *, const void *, size_t);
+void buffer_add_char(struct buffer *, char);
+void buffer_add_str(struct buffer *, const char *);
+void buffer_add_mem(struct buffer *, const void *, size_t);
 
-void buffer_add_u16l(BUFFER *, uint16_t);
+void buffer_add_u16l(struct buffer *, uint16_t);
 
-void buffer_destroy(BUFFER *);
-void buffer_destroy_keep(BUFFER *);
+void buffer_destroy(struct buffer *);
+void buffer_destroy_keep(struct buffer *);
 
 #endif

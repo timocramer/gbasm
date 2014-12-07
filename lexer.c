@@ -165,7 +165,7 @@ static int scan_int(void) {
 
 static int scan_string(void) {
 	char new_char;
-	BUFFER *buf;
+	struct buffer *buf;
 	
 	if(*src == '"') {
 		buf = buffer_new();
@@ -323,7 +323,7 @@ static int scan_special_identifier(void) {
 }
 
 static int scan_identifier(void) {
-	BUFFER *buf;
+	struct buffer *buf;
 	
 	/* as the first char, no numbers are allowed */
 	if(isalpha(*src) || *src == '_') {

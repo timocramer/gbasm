@@ -17,7 +17,7 @@ char *input_filename;
 
 char *src;
 int pass;
-BUFFER *binary;
+struct buffer *binary;
 
 static char* read_file(const char *filename) {
 	FILE *f;

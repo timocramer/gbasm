@@ -11,6 +11,6 @@ extern char *input_filename;
 extern char *src;
 extern int pass;
 
-extern BUFFER *binary;
+extern struct buffer *binary;
 
 #endif
