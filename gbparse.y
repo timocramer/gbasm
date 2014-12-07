@@ -223,7 +223,7 @@ IDENTIFIER ':' {
 	#ifdef DEBUG
 		printf("%s:\n", $1);
 	#endif
-		if(pass == 1 && store_label($1, binary->write_pos))
+		if(pass == 1 && store_label($1, binary.write_pos))
 			location_error(@1, "multiple definition of label '%s'", $1);
 		free($1);
 	}
@@ -248,14 +248,14 @@ IDENTIFIER ':' {
 	#ifdef DEBUG
 		printf("seek %d\n", $2);
 	#endif
-		binary->write_pos = $2;
+		binary.write_pos = $2;
 	}
 
 /** real instructions */
 /* instructions without arguments */
 | single_instruction {
 		debug_puts(SINGLE_INSTRUCTION($1));
-		buffer_add_char(binary, $1);
+		buffer_add_char(&binary, $1);
 	}
 
 /* push & pop */
@@ -285,7 +285,7 @@ IDENTIFIER ':' {
 | JP flag ',' uint16 { jp(HAS_FLAG, $2, $4); }
 | JP HL {
 		debug_puts("jp hl");
-		buffer_add_char(binary, 0xe9);
+		buffer_add_char(&binary, 0xe9);
 	}
 
 | JR uint8 { jr(NO_FLAG, 0, $2); }
@@ -328,7 +328,7 @@ IDENTIFIER ':' {
 | LD '[' uint16 ']' ',' SP { ld_sp_mem($3); }
 | LD SP ',' HL {
 		debug_puts("ld sp, hl");
-		buffer_add_char(binary, 0xf9);
+		buffer_add_char(&binary, 0xf9);
 	}
 | LDHL SP ',' uint8 { ldhl($4); }
 
@@ -347,18 +347,18 @@ IDENTIFIER ':' {
 ;
 
 uint8list:
-uint8 { buffer_add_char(binary, $1); }
-| uint8list ',' uint8 { buffer_add_char(binary, $3); }
+uint8 { buffer_add_char(&binary, $1); }
+| uint8list ',' uint8 { buffer_add_char(&binary, $3); }
 ;
 
 uint16list:
-uint16 { buffer_add_u16l(binary, $1); }
-| uint16list ',' uint16 { buffer_add_u16l(binary, $3); }
+uint16 { buffer_add_u16l(&binary, $1); }
+| uint16list ',' uint16 { buffer_add_u16l(&binary, $3); }
 ;
 
 stringlist:
-string { buffer_add_str(binary, $1); free($1); }
-| stringlist ',' string { buffer_add_str(binary, $3); free($3); }
+string { buffer_add_str(&binary, $1); free($1); }
+| stringlist ',' string { buffer_add_str(&binary, $3); free($3); }
 ;
 
 cb_without_int:
@@ -572,7 +572,7 @@ static void ds(unsigned int size, unsigned char value) {
 	printf("ds %u, %u\n", size, value);
 #endif
 	memset(p, value, size);
-	buffer_add_mem(binary, p, size);
+	buffer_add_mem(&binary, p, size);
 }
 
 static void jp(int has_flag, unsigned char flag, uint16_t address) {
@@ -594,7 +594,7 @@ static void jp(int has_flag, unsigned char flag, uint16_t address) {
 	mem[1] = address & 0xff;
 	mem[2] = address >> 8;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void jr(int has_flag, unsigned char flag, unsigned char offset) {
@@ -615,7 +615,7 @@ static void jr(int has_flag, unsigned char flag, unsigned char offset) {
 	
 	mem[1] = offset;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void call(int has_flag, unsigned char flag, uint16_t address) {
@@ -637,7 +637,7 @@ static void call(int has_flag, unsigned char flag, uint16_t address) {
 	mem[1] = address & 0xff;
 	mem[2] = address >> 8;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void ret(unsigned char flag) {
@@ -648,7 +648,7 @@ static void ret(unsigned char flag) {
 	unsigned char opcode = 0xc0;
 	opcode |= flag << 3;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 
@@ -665,7 +665,7 @@ static void ld_simple(unsigned char dest, unsigned char source) {
 	opcode |= dest << 3;
 	opcode |= source;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void ld_const(unsigned char dest, unsigned char c) {
@@ -677,7 +677,7 @@ static void ld_const(unsigned char dest, unsigned char c) {
 	mem[0] = 0x06 | (dest << 3);
 	mem[1] = c;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void ld_bcde(unsigned char dreg, unsigned char direction) {
@@ -692,7 +692,7 @@ static void ld_bcde(unsigned char dreg, unsigned char direction) {
 	opcode |= dreg << 4;
 	opcode |= direction << 3;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void ld_a_mem(unsigned char direction, uint16_t address) {
@@ -708,7 +708,7 @@ static void ld_a_mem(unsigned char direction, uint16_t address) {
 	mem[1] = address & 0xff;
 	mem[2] = address >> 8;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void ldi_ldd(unsigned char operation, unsigned char direction) {
@@ -722,7 +722,7 @@ static void ldi_ldd(unsigned char operation, unsigned char direction) {
 	opcode |= operation << 4;
 	opcode |= direction << 3;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void ldh_addr(unsigned char direction, unsigned char offset) {
@@ -737,7 +737,7 @@ static void ldh_addr(unsigned char direction, unsigned char offset) {
 	mem[0] = 0xe0 | (direction << 4);
 	mem[1] = offset;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void ldh_c(unsigned char direction) {
@@ -748,7 +748,7 @@ static void ldh_c(unsigned char direction) {
 	unsigned char opcode = 0xe2;
 	opcode |= direction << 4;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void ld_const16(unsigned char dest, uint16_t c) {
@@ -761,7 +761,7 @@ static void ld_const16(unsigned char dest, uint16_t c) {
 	mem[1] = c & 0xff;
 	mem[2] = c >> 8;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void ldhl(unsigned char offset) {
@@ -773,7 +773,7 @@ static void ldhl(unsigned char offset) {
 	mem[0] = 0xf8;
 	mem[1] = offset;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void ld_sp_mem(uint16_t address) {
@@ -786,7 +786,7 @@ static void ld_sp_mem(uint16_t address) {
 	mem[1] = address & 0xff;
 	mem[2] = address >> 8;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 
@@ -799,7 +799,7 @@ static void aluop_simple(unsigned char operation, unsigned char reg) {
 	opcode |= operation << 3;
 	opcode |= reg;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void aluop_const(unsigned char operation, unsigned char c) {
@@ -811,7 +811,7 @@ static void aluop_const(unsigned char operation, unsigned char c) {
 	mem[0] = 0xc6 | (operation << 3);
 	mem[1] = c;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void add_hl(unsigned char dreg) {
@@ -822,7 +822,7 @@ static void add_hl(unsigned char dreg) {
 	unsigned char opcode = 0x09;
 	opcode |= dreg << 4;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void add_sp(unsigned char n) {
@@ -834,7 +834,7 @@ static void add_sp(unsigned char n) {
 	mem[0] = 0xe8;
 	mem[1] = n;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 
@@ -847,7 +847,7 @@ static void push_pop(unsigned char operation, unsigned char reg) {
 	opcode |= reg << 4;
 	opcode |= operation << 2;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void inc_dec_dreg(unsigned char operation, unsigned char reg) {
@@ -859,7 +859,7 @@ static void inc_dec_dreg(unsigned char operation, unsigned char reg) {
 	opcode |= reg << 4;
 	opcode |= operation << 3;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void inc_dec_sreg(unsigned char operation, unsigned char reg) {
@@ -871,7 +871,7 @@ static void inc_dec_sreg(unsigned char operation, unsigned char reg) {
 	opcode |= reg << 3;
 	opcode |= operation;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void rst(unsigned int addr) {
@@ -887,7 +887,7 @@ static void rst(unsigned int addr) {
 	unsigned char opcode = 0xc7;
 	opcode |= tmp << 3;
 	
-	buffer_add_char(binary, opcode);
+	buffer_add_char(&binary, opcode);
 }
 
 static void cb_function(unsigned char function, unsigned char reg) {
@@ -899,7 +899,7 @@ static void cb_function(unsigned char function, unsigned char reg) {
 	mem[0] = 0xcb;
 	mem[1] = (function << 3) | reg;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }
 
 static void cb_int_function(unsigned char function, unsigned int n, unsigned char reg) {
@@ -911,5 +911,5 @@ static void cb_int_function(unsigned char function, unsigned int n, unsigned cha
 	mem[0] = 0xcb;
 	mem[1] = (function << 6) | (n << 3) | reg;
 	
-	buffer_add_mem(binary, mem, sizeof(mem));
+	buffer_add_mem(&binary, mem, sizeof(mem));
 }

@@ -5,19 +5,11 @@
 #include "errors.h"
 #include "buffer.h"
 
-struct buffer* buffer_new(void) {
-	struct buffer *b;
-	
-	b = malloc(sizeof(struct buffer));
-	if(b == NULL)
-		no_memory();
-	
+void buffer_init(struct buffer *b) {
 	b->data = NULL;
 	b->size = 0;
 	b->alloc_size = 0;
 	b->write_pos = 0;
-	
-	return b;
 }
 
 #define CHUNK_SIZE 128
@@ -80,17 +72,4 @@ void buffer_add_mem(struct buffer *b, const void *m, size_t s) {
 void buffer_add_u16l(struct buffer *b, uint16_t i) {
 	buffer_add_char(b, i & 0xff);
 	buffer_add_char(b, i >> 8);
-}
-
-/* frees the buffer and the internal data array */
-void buffer_destroy(struct buffer *b) {
-	if(b != NULL) {
-		free(b->data);
-		free(b);
-	}
-}
-
-/* frees the buffer, but not the data component */
-void buffer_destroy_keep(struct buffer *b) {
-	free(b);
 }

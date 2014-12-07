@@ -165,15 +165,14 @@ static int scan_int(void) {
 
 static int scan_string(void) {
 	char new_char;
-	struct buffer *buf;
+	struct buffer buf;
 	
-	if(*src == '"') {
-		buf = buffer_new();
-		++yylloc.last_column;
-		++src;
-	}
-	else
+	if(*src != '"')
 		return 0;
+	
+	buffer_init(&buf);
+	++yylloc.last_column;
+	++src;
 	
 	while(*src != '"') {
 		if(*src == 0) {
@@ -198,7 +197,7 @@ static int scan_string(void) {
 		else
 			new_char = *src;
 		
-		buffer_add_char(buf, new_char);
+		buffer_add_char(&buf, new_char);
 		if(*src == '\n') {
 			++yylloc.last_line;
 			yylloc.last_column = 1;
@@ -208,9 +207,8 @@ static int scan_string(void) {
 		++src;
 	}
 	
-	buffer_add_char(buf, 0);
-	yylval.string = buf->data;
-	buffer_destroy_keep(buf);
+	buffer_add_char(&buf, 0);
+	yylval.string = buf.data;
 	
 #ifdef DEBUG
 	printf("yylex returns \"%s\"\n", yylval.string);
@@ -323,12 +321,12 @@ static int scan_special_identifier(void) {
 }
 
 static int scan_identifier(void) {
-	struct buffer *buf;
+	struct buffer buf;
 	
-	/* as the first char, no numbers are allowed */
+	/* for the first char, no numbers are allowed */
 	if(isalpha(*src) || *src == '_') {
-		buf = buffer_new();
-		buffer_add_char(buf, *src);
+		buffer_init(&buf);
+		buffer_add_char(&buf, *src);
 	}
 	else
 		return 0;
@@ -336,14 +334,13 @@ static int scan_identifier(void) {
 	++src;
 	
 	while(IDENTIFIER_CHAR(*src)) {
-		buffer_add_char(buf, *src);
+		buffer_add_char(&buf, *src);
 		++yylloc.last_column;
 		++src;
 	}
-	buffer_add_char(buf, 0);
+	buffer_add_char(&buf, 0);
 	
-	yylval.identifier = buf->data;
-	buffer_destroy_keep(buf);
+	yylval.identifier = buf.data;
 #ifdef DEBUG
 	printf("yylex returns identifier %s\n", yylval.identifier);
 #endif

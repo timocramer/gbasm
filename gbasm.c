@@ -17,7 +17,7 @@ char *input_filename;
 
 char *src;
 int pass;
-struct buffer *binary;
+struct buffer binary;
 
 static char* read_file(const char *filename) {
 	FILE *f;
@@ -68,8 +68,8 @@ static char get_rom_size_code(size_t size) {
 
 static void warn_if_overwrite(void) {
 	size_t i;
-	for(i = 0x100; i < 0x150 && i < binary->size; ++i) {
-		if(binary->data[i] != 0) {
+	for(i = 0x100; i < 0x150 && i < binary.size; ++i) {
+		if(binary.data[i] != 0) {
 			gbasm_warning("There is data that is overwritten by metadata");
 			return;
 		}
@@ -111,7 +111,7 @@ static void write_metadata(const char *game_name) {
 	strncpy(m + GAME_NAME_OFFSET, game_name, GAME_NAME_MAX_LENGTH);
 	
 	// set size code
-	m[0x48] = get_rom_size_code(binary->size);
+	m[0x48] = get_rom_size_code(binary.size);
 	
 	// set complement information
 	complement = 25;
@@ -120,8 +120,8 @@ static void write_metadata(const char *game_name) {
 	m[0x4d] = -complement;
 	
 	warn_if_overwrite();
-	binary->write_pos = 0x100;
-	buffer_add_mem(binary, m, 0x50);
+	binary.write_pos = 0x100;
+	buffer_add_mem(&binary, m, 0x50);
 }
 
 static void write_binary_to_file(const char *out_filename) {
@@ -132,8 +132,8 @@ static void write_binary_to_file(const char *out_filename) {
 	if(f == NULL)
 		return;
 	
-	written = fwrite(binary->data, 1, binary->size, f);
-	if(written != binary->size)
+	written = fwrite(binary.data, 1, binary.size, f);
+	if(written != binary.size)
 		gbasm_error("'%s' was not written successfully", out_filename);
 	
 	fclose(f);
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
 	src = read_file(input_filename);
 	srcbase = src;
 	
-	binary = buffer_new();
+	buffer_init(&binary);
 	
 	/* make pass 1 */
 	pass = 1;
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
 	yylloc.last_column = 1;
 	yylloc.first_line = 1;
 	yylloc.last_line = 1;
-	binary->write_pos = 0;
+	binary.write_pos = 0;
 	pass = 2;
 	yyparse();
 	
@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
 	/* clean up a bit */
 	free(srcbase);
 	variables_destroy();
-	buffer_destroy(binary);
+	free(binary.data);
 	
 	return 0;
 }
