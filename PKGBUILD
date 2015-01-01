@@ -2,7 +2,7 @@
 
 pkgname=gbasm-git
 _gitname=gbasm
-pkgver=
+pkgver=r100.f4bcbc8
 pkgrel=1
 pkgdesc="An assembler for the Z80-like GameBoy"
 arch=('i686' 'x86_64' 'armv6h')
@@ -15,9 +15,8 @@ source=('git://github.com/timocramer/gbasm.git')
 md5sums=('SKIP')
 
 pkgver() {
-	cd $_gitname
-	# Use the tag of the last commit
-	git describe --always | sed 's|-|.|g'
+	cd "$_gitname"
+	printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 build() {
@@ -27,5 +26,5 @@ build() {
 
 package() {
 	cd $_gitname
-	make PREFIX="$pkgdir"/usr install
+	make DESTDIR="$pkgdir" PREFIX=/usr install
 }

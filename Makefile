@@ -2,8 +2,9 @@ CFLAGS=-Wall -Wextra -O2 -pipe -std=c11 -D_POSIX_C_SOURCE=200809L
 
 HEADERS=gbparse.h gbasm.h buffer.h variables.h errors.h
 
+DESTDIR=/
 PREFIX=/usr/local
-BINDIR=$(PREFIX)/bin
+BINDIR=$(DESTDIR)$(PREFIX)/bin
 
 .PHONY: all clean install test
 
@@ -29,5 +30,6 @@ test: gbasm
 	@$(MAKE) -C test test
 
 install:
-	install -Ds gbasm $(BINDIR)
-	install -Ds gbdasm $(BINDIR)
+	mkdir -p $(BINDIR)
+	install -s gbasm $(BINDIR)
+	install -s gbdasm $(BINDIR)
