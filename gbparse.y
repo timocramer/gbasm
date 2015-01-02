@@ -192,19 +192,19 @@ static void cb_int_function(unsigned char, unsigned int, unsigned char);
 %type <string> string stringlist
 
 %token END 0 "end of file" /* this allows a nicer error message */
-%token DB DM DS DW SEEK INC DEC JR LDD LDI PUSH POP CALL JP RET LDHL RST LDH LD RLC RRC RL RR SLA SRA SWAP SRL BIT RES SET CCF CPL DAA DI EI HALT NOP RETI RLA RLCA RRA RRCA SCF STOP Z NZ NC A B C D E H L ADD ADC SUB SBC AND OR XOR CP BC DE HL AF SP DEFINE
+%token DB DEFB DM DEFM DS DEFS DW DEFW SEEK INC DEC JR LDD LDI PUSH POP CALL JP RET LDHL RST LDH LD RLC RRC RL RR SLA SRA SWAP SRL BIT RES SET CCF CPL DAA DI EI HALT NOP RETI RLA RLCA RRA RRCA SCF STOP Z NZ NC A B C D E H L ADD ADC SUB SBC AND OR XOR CP BC DE HL AF SP DEFINE
 
 %token ','
 
 %right '?' ':'
-%left LOGOR
-%left LOGAND
+%left "||"
+%left "&&"
 %left '|'
 %left '^'
 %left '&'
-%nonassoc EQ NEQ
-%nonassoc '<' LE '>' GE
-%left LSHIFT RSHIFT
+%nonassoc "==" "!="
+%nonassoc '<' "<=" '>' ">="
+%left "<<" ">>"
 %left '+' '-'
 %left '*' '/' '%'
 %precedence UNARY
@@ -237,13 +237,18 @@ IDENTIFIER ':' {
 		free($3);
 	}
 
-/* the following three rules write into the binary in the expression of the list */
+/* the following rules write into the binary in the expression of the list */
 | DM stringlist
+| DEFM stringlist
 | DB uint8list
+| DEFB uint8list
 | DW uint16list
+| DEFW uint16list
 
 | DS immediate { ds($2, 0); }
+| DEFS immediate { ds($2, 0); }
 | DS immediate ',' uint8 { ds($2, $4); }
+| DEFS immediate ',' uint8 { ds($2, $4); }
 | SEEK numexp {
 	#ifdef DEBUG
 		printf("seek %d\n", $2);
@@ -465,23 +470,23 @@ INTEGER { $$ = $1; }
 | numexp '/' numexp { $$ = $1 / $3; }
 | numexp '%' numexp { $$ = $1 % $3; }
 
-| numexp LSHIFT numexp { $$ = $1 << $3; }
-| numexp RSHIFT numexp { $$ = $1 >> $3; }
+| numexp "<<" numexp { $$ = $1 << $3; }
+| numexp ">>" numexp { $$ = $1 >> $3; }
 
 | numexp '<' numexp { $$ = $1 < $3; }
-| numexp LE numexp  { $$ = $1 <= $3; }
+| numexp "<=" numexp  { $$ = $1 <= $3; }
 | numexp '>' numexp { $$ = $1 > $3; }
-| numexp GE numexp  { $$ = $1 >= $3; }
+| numexp ">=" numexp  { $$ = $1 >= $3; }
 
-| numexp EQ numexp  { $$ = $1 == $3; }
-| numexp NEQ numexp { $$ = $1 != $3; }
+| numexp "==" numexp  { $$ = $1 == $3; }
+| numexp "!=" numexp { $$ = $1 != $3; }
 
 | numexp '&' numexp { $$ = $1 & $3; }
 | numexp '|' numexp { $$ = $1 | $3; }
 | numexp '^' numexp { $$ = $1 ^ $3; }
 
-| numexp LOGAND numexp { $$ = $1 && $3; }
-| numexp LOGOR numexp  { $$ = $1 || $3; }
+| numexp "&&" numexp { $$ = $1 && $3; }
+| numexp "||" numexp  { $$ = $1 || $3; }
 
 | numexp '?' numexp ':' numexp { $$ = $1 ? $3 : $5; }
 
@@ -511,23 +516,23 @@ INTEGER { $$ = $1; }
 | immediate '/' immediate { $$ = $1 / $3; }
 | immediate '%' immediate { $$ = $1 % $3; }
 
-| immediate LSHIFT immediate { $$ = $1 << $3; }
-| immediate RSHIFT immediate { $$ = $1 >> $3; }
+| immediate "<<" immediate { $$ = $1 << $3; }
+| immediate ">>" immediate { $$ = $1 >> $3; }
 
 | immediate '<' immediate { $$ = $1 < $3; }
-| immediate LE immediate  { $$ = $1 <= $3; }
+| immediate "<=" immediate  { $$ = $1 <= $3; }
 | immediate '>' immediate { $$ = $1 > $3; }
-| immediate GE immediate  { $$ = $1 >= $3; }
+| immediate ">=" immediate  { $$ = $1 >= $3; }
 
-| immediate EQ immediate  { $$ = $1 == $3; }
-| immediate NEQ immediate { $$ = $1 != $3; }
+| immediate "==" immediate  { $$ = $1 == $3; }
+| immediate "!=" immediate { $$ = $1 != $3; }
 
 | immediate '&' immediate { $$ = $1 & $3; }
 | immediate '|' immediate { $$ = $1 | $3; }
 | immediate '^' immediate { $$ = $1 ^ $3; }
 
-| immediate LOGAND immediate { $$ = $1 && $3; }
-| immediate LOGOR immediate  { $$ = $1 || $3; }
+| immediate "&&" immediate { $$ = $1 && $3; }
+| immediate "||" immediate  { $$ = $1 || $3; }
 
 | immediate '?' immediate ':' immediate { $$ = $1 ? $3 : $5; }
 

@@ -18,30 +18,30 @@ struct element {
 	int tok;
 };
 
-static const struct element operators[] = {
-	{.op = "&&", .tok = LOGAND},
-	{.op = "||", .tok = LOGOR},
-	{.op = "==", .tok = EQ},
-	{.op = "!=", .tok = NEQ},
-	{.op = "<<", .tok = LSHIFT},
-	{.op = ">>", .tok = RSHIFT},
-	{.op = "<=", .tok = LE},
-	{.op = ">=", .tok = GE}
+static const char *multibyte_operators[] = {
+	"&&",
+	"||",
+	"==",
+	"!=",
+	"<<",
+	">>",
+	"<=",
+	">="
 };
 
-static int scan_operator(void) {
+static int scan_multibyte_operator(void) {
 	size_t i;
 	size_t len;
 	
-	for(i = 0; i < sizeof(operators) / sizeof(operators[0]); ++i) {
-		len = strlen(operators[i].op);
-		if(strncmp(src, operators[i].op, len) == 0) {
+	for(i = 0; i < sizeof(multibyte_operators) / sizeof(multibyte_operators[0]); ++i) {
+		len = strlen(multibyte_operators[i]);
+		if(strncmp(src, multibyte_operators[i], len) == 0) {
 			src += len;
 			yylloc.last_column += len;
 #ifdef DEBUG
-			printf("yylex returns %s\n", operators[i].op);
+			printf("yylex returns %s\n", multibyte_operators[i]);
 #endif
-			return operators[i].tok;
+			return (intptr_t)(multibyte_operators[i]);
 		}
 	}
 	return 0;
@@ -239,11 +239,11 @@ static const struct element tokentable[] = {
 	ENTRY(DB),
 	ENTRY(DE),
 	ENTRY(DEC),
-	{.op = "DEFB", .tok = DB},
+	ENTRY(DEFB),
 	ENTRY(DEFINE),
-	{.op = "DEFM", .tok = DM},
-	{.op = "DEFS", .tok = DS},
-	{.op = "DEFW", .tok = DW},
+	ENTRY(DEFM),
+	ENTRY(DEFS),
+	ENTRY(DEFW),
 	ENTRY(DI),
 	ENTRY(DM),
 	ENTRY(DS),
@@ -389,7 +389,7 @@ int yylex(void) {
 	yylloc.first_line = yylloc.last_line;
 	yylloc.first_column = yylloc.last_column;
 	
-	status = scan_operator();
+	status = scan_multibyte_operator();
 	if(status != 0)
 		return status;
 	
